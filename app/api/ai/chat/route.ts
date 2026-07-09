@@ -32,6 +32,11 @@ export async function POST(request: Request) {
     .single()
   if (!company) return NextResponse.json({ error: 'Company not found' }, { status: 404 })
 
-  const result = await search(companyId, query)
-  return NextResponse.json(result)
+  try {
+    const result = await search(companyId, query)
+    return NextResponse.json(result)
+  } catch (err) {
+    console.error('AI Assistant search failed:', err)
+    return NextResponse.json({ error: 'The AI Assistant hit an error answering that. Please try again.' }, { status: 502 })
+  }
 }
