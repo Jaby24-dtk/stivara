@@ -32,11 +32,26 @@ export async function POST(request: Request) {
 
   const events = generateComplianceEvents(jurisdiction, fye)
   if (events.length > 0) {
-    const { error: eventsError } = await supabase
+    const { data: insertedEvents, error: eventsError } = await supabase
       .from('compliance_events')
       .insert(events.map((e) => ({ company_id: company.id, type: e.type, due_date: e.due_date })))
+      .select()
     if (eventsError) {
       return NextResponse.json({ company, warning: `Compliance events not created: ${eventsError.message}` })
+    }
+
+    // Every compliance deadline should show up as something to actually do,
+    // not just a date on a calendar — so each event gets a matching task.
+    const { error: tasksError } = await supabase.from('tasks').insert(
+      (insertedEvents ?? []).map((e) => ({
+        company_id: company.id,
+        title: `Complete: ${e.type}`,
+        due_date: e.due_date,
+        source_compliance_event_id: e.id,
+      }))
+    )
+    if (tasksError) {
+      return NextResponse.json({ company, warning: `Tasks not created: ${tasksError.message}` })
     }
   }
 

@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Company, ComplianceEvent, Document } from '@/lib/types'
+import type { Company, ComplianceEvent, Document, Task } from '@/lib/types'
 import { UploadDocumentButton } from '@/components/documents/UploadDocumentButton'
+import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,6 +16,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     .select('*')
     .eq('company_id', id)
     .order('due_date')
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('company_id', id)
+    .order('due_date', { ascending: true, nullsFirst: false })
   const { data: documents } = await supabase
     .from('documents')
     .select('*')
@@ -23,6 +29,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
   const companyRow = company as Company
   const eventList = (events ?? []) as ComplianceEvent[]
+  const taskList = (tasks ?? []) as Task[]
   const documentList = (documents ?? []) as Document[]
 
   return (
@@ -45,6 +52,25 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                 <span className="text-slate-700">{e.type}</span>
                 <span className="text-slate-500">{e.due_date}</span>
                 <span className="badge badge-gray">{e.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="card p-6">
+        <h2 className="font-semibold text-slate-900 mb-4">Tasks</h2>
+        {taskList.length === 0 ? (
+          <p className="text-sm text-slate-500">No tasks yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {taskList.map((t) => (
+              <li key={t.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
+                <span className="text-slate-700">{t.title}</span>
+                <div className="flex items-center gap-3">
+                  {t.due_date && <span className="text-slate-500">{t.due_date}</span>}
+                  <TaskStatusSelect taskId={t.id} status={t.status} />
+                </div>
               </li>
             ))}
           </ul>
