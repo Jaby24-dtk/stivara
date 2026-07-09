@@ -1,8 +1,17 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Company, ComplianceEvent, Document, Task } from '@/lib/types'
+import type { Company, ComplianceEvent, Document, Person, RoleAssignment, Task } from '@/lib/types'
 import { UploadDocumentButton } from '@/components/documents/UploadDocumentButton'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
+import { AddPersonButton } from '@/components/people/AddPersonButton'
+import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
+
+const roleLabel: Record<RoleAssignment['role'], string> = {
+  director: 'Director',
+  shareholder: 'Shareholder',
+  officer: 'Officer',
+  beneficial_owner: 'Beneficial owner',
+}
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -26,11 +35,19 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     .select('*')
     .eq('company_id', id)
     .order('created_at', { ascending: false })
+  const { data: roleAssignments } = await supabase
+    .from('role_assignments')
+    .select('*, people(name, email)')
+    .eq('company_id', id)
+    .is('end_date', null)
+    .order('start_date')
 
   const companyRow = company as Company
   const eventList = (events ?? []) as ComplianceEvent[]
   const taskList = (tasks ?? []) as Task[]
   const documentList = (documents ?? []) as Document[]
+  type RoleAssignmentRow = RoleAssignment & { people: Pick<Person, 'name' | 'email'> | null }
+  const roleAssignmentList = (roleAssignments ?? []) as unknown as RoleAssignmentRow[]
 
   return (
     <div className="flex flex-col gap-6">
@@ -39,6 +56,31 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <p className="text-sm text-slate-500">
           {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
         </p>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-slate-900">People</h2>
+          <AddPersonButton companyId={id} />
+        </div>
+        {roleAssignmentList.length === 0 ? (
+          <p className="text-sm text-slate-500">No directors, shareholders, or officers on record yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {roleAssignmentList.map((r) => (
+              <li key={r.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
+                <div>
+                  <span className="text-slate-900 font-medium">{r.people?.name ?? '—'}</span>
+                  {r.people?.email && <span className="text-slate-400 ml-2">{r.people.email}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="badge badge-info">{roleLabel[r.role]}</span>
+                  <RemoveRoleButton roleAssignmentId={r.id} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="card p-6">

@@ -55,3 +55,20 @@ export type Document = {
   uploaded_by: string | null
   created_at: string
 }
+
+export type Person = {
+  id: string
+  organization_id: string
+  name: string
+  email: string | null
+  created_at: string
+}
+
+export type RoleAssignment = {
+  id: string
+  person_id: string
+  company_id: string
+  role: 'director' | 'shareholder' | 'officer' | 'beneficial_owner'
+  start_date: string
+  end_date: string | null
+}
