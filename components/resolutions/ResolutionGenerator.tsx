@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DownloadTextButton } from '@/components/documents/DownloadTextButton'
+import { DocumentPreview } from '@/components/documents/DocumentPreview'
 
 export function ResolutionGenerator({ companyId, companyName }: { companyId: string; companyName: string }) {
   const router = useRouter()
@@ -76,7 +77,7 @@ export function ResolutionGenerator({ companyId, companyName }: { companyId: str
               </button>
             </div>
           </div>
-          <pre className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-4 border border-slate-100">{draft}</pre>
+          <DocumentPreview content={draft} />
         </div>
       )}
     </div>

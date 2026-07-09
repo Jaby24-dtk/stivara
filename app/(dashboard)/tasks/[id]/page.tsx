@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Company, ComplianceEvent, Task } from '@/lib/types'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { DownloadTextButton } from '@/components/documents/DownloadTextButton'
+import { DocumentPreview } from '@/components/documents/DocumentPreview'
 import { getChecklist } from '@/lib/compliance/checklists'
 import { generateAgmNotice } from '@/lib/documents/agmNotice'
 
@@ -13,12 +14,12 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
 
   const { data: task } = await supabase
     .from('tasks')
-    .select('*, companies(id, name)')
+    .select('*, companies(id, name, jurisdiction)')
     .eq('id', id)
     .single()
   if (!task) notFound()
 
-  type TaskRow = Task & { companies: Pick<Company, 'id' | 'name'> | null }
+  type TaskRow = Task & { companies: Pick<Company, 'id' | 'name' | 'jurisdiction'> | null }
   const taskRow = task as unknown as TaskRow
 
   let event: ComplianceEvent | null = null
@@ -32,9 +33,26 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
   }
 
   const checklist = event ? getChecklist(event.type) : []
-  const notice = event?.type === 'AGM' && taskRow.companies
-    ? generateAgmNotice({ companyName: taskRow.companies.name, agmDate: event.due_date })
-    : null
+
+  let notice: string | null = null
+  if (event?.type === 'AGM' && taskRow.companies) {
+    const { data: directorRows } = await supabase
+      .from('role_assignments')
+      .select('people(name)')
+      .eq('company_id', taskRow.companies.id)
+      .eq('role', 'director')
+      .is('end_date', null)
+    const directors = (directorRows ?? [])
+      .map((r) => (r.people as unknown as { name: string } | null)?.name)
+      .filter((name): name is string => !!name)
+
+    notice = await generateAgmNotice({
+      companyName: taskRow.companies.name,
+      jurisdiction: taskRow.companies.jurisdiction,
+      agmDate: event.due_date,
+      directors,
+    })
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,7 +89,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
             <h2 className="font-semibold text-slate-900">Draft AGM Notice</h2>
             <DownloadTextButton filename={`${taskRow.companies?.name ?? 'agm'}-notice.txt`} content={notice} />
           </div>
-          <pre className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-4 border border-slate-100">{notice}</pre>
+          <DocumentPreview content={notice} />
         </div>
       )}
 
