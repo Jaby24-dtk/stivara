@@ -177,7 +177,11 @@ export default function TrustCenterPage() {
         <section className="card p-8 text-center bg-[#0F172A]">
           <h2 className="text-white font-semibold text-lg mb-2">Have a security question?</h2>
           <p className="text-slate-300 text-sm mb-1">
-            Reach out to your account contact and we&apos;ll get you a straight answer.
+            Email{' '}
+            <a href="mailto:director@iamstivai.com" className="text-teal-300 font-medium">
+              director@iamstivai.com
+            </a>{' '}
+            and we&apos;ll get you a straight answer.
           </p>
         </section>
       </main>
