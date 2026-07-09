@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
-import { isAnthropicConfigured } from '@/lib/ai/anthropic'
+import { isGeminiConfigured } from '@/lib/ai/gemini'
 import { isEmbeddingsConfigured } from '@/lib/ai/embeddings'
 import { search } from '@/lib/ai/documentSearch'
 
@@ -9,9 +9,9 @@ export async function POST(request: Request) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  if (!isAnthropicConfigured() || !isEmbeddingsConfigured()) {
+  if (!isGeminiConfigured() || !isEmbeddingsConfigured()) {
     return NextResponse.json(
-      { error: 'AI Assistant is not configured. Add ANTHROPIC_API_KEY and VOYAGE_API_KEY to .env.local.' },
+      { error: 'AI Assistant is not configured. Add GEMINI_API_KEY to .env.local.' },
       { status: 503 }
     )
   }

@@ -10,12 +10,11 @@ Implements: multi-tenant auth, Company/Person/Role data model, document manageme
 2. In the Supabase SQL editor, run `supabase/schema.sql` in full (creates tables, RLS policies, the `documents` storage bucket, and the `match_doc_chunks` vector search function). Requires the `vector` extension, which is enabled on all Supabase projects by default.
 3. Copy `.env.local.example` to `.env.local` and fill in:
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — from Supabase Settings > API
-   - `ANTHROPIC_API_KEY` — from [console.anthropic.com](https://console.anthropic.com)
-   - `VOYAGE_API_KEY` — from [dash.voyageai.com](https://dash.voyageai.com), used for document embeddings
+   - `GEMINI_API_KEY` — from [aistudio.google.com](https://aistudio.google.com), free tier, used for both the AI Assistant chat and document embeddings
 4. `npm install`
 5. `npm run dev`, then open [localhost:3000](http://localhost:3000)
 
-Without Supabase configured, the app still boots — auth pages show a "not configured" message instead of crashing. Without `ANTHROPIC_API_KEY`/`VOYAGE_API_KEY`, everything works except the AI Assistant, which returns a clear "not configured" error.
+Without Supabase configured, the app still boots — auth pages show a "not configured" message instead of crashing. Without `GEMINI_API_KEY`, everything works except the AI Assistant, which returns a clear "not configured" error.
 
 ## Sign up
 

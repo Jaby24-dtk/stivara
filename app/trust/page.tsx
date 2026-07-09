@@ -56,8 +56,7 @@ const jurisdictions = [
 const subprocessors = [
   { name: 'Supabase', purpose: 'Primary database (Postgres), authentication, and file storage' },
   { name: 'Vercel', purpose: 'Application hosting and compute' },
-  { name: 'Anthropic', purpose: 'AI model provider for the AI Company Secretary chat and document Q&A' },
-  { name: 'Voyage AI', purpose: 'Generates the embeddings used for document search' },
+  { name: 'Google Gemini', purpose: 'AI model provider for the AI Company Secretary chat, document Q&A, and search embeddings' },
 ]
 
 export default function TrustCenterPage() {

@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { chat } from '@/lib/ai/anthropic'
+import { chat } from '@/lib/ai/gemini'
 import { embed } from '@/lib/ai/embeddings'
 
 const CHUNK_SIZE = 1500 // chars, roughly ~350 tokens

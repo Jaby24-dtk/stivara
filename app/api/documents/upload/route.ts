@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     .single()
   if (docError) return NextResponse.json({ error: docError.message }, { status: 400 })
 
-  // Indexing is best-effort: a Voyage outage or bad key shouldn't fail the
+  // Indexing is best-effort: a Gemini outage or bad key shouldn't fail the
   // upload itself, since the document is already safely stored.
   let indexed = false
   if (isEmbeddingsConfigured() && INDEXABLE_TYPES.includes(file.type)) {

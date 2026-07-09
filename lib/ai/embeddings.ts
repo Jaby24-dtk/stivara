@@ -1,30 +1,34 @@
-// Voyage AI embeddings — Anthropic's recommended embedding partner, matching
-// the "Claude primary, provider-agnostic AI Actions layer" intent in the
-// build brief (Section 9). No official Node SDK, so this calls the REST API
-// directly to avoid an extra dependency.
+// Google Gemini embeddings — shares GEMINI_API_KEY with lib/ai/gemini.ts.
+// Fixed at 768 dimensions to match the doc_chunks.embedding column (see
+// supabase/schema.sql) — gemini-embedding-001 supports truncating its native
+// output down to 768/1536/3072 via outputDimensionality.
 
-const VOYAGE_EMBED_URL = 'https://api.voyageai.com/v1/embeddings'
-const MODEL = 'voyage-3'
+const EMBED_MODEL = 'gemini-embedding-001'
+const BATCH_EMBED_URL = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:batchEmbedContents`
+export const EMBEDDING_DIMENSIONS = 768
 
 export function isEmbeddingsConfigured(): boolean {
-  const key = process.env.VOYAGE_API_KEY ?? ''
-  return key.length > 0 && !key.includes('your-voyage-api-key-here')
+  const key = process.env.GEMINI_API_KEY ?? ''
+  return key.length > 0 && !key.includes('your-gemini-api-key-here')
 }
 
 export async function embed(texts: string[]): Promise<number[][]> {
-  const res = await fetch(VOYAGE_EMBED_URL, {
+  const res = await fetch(`${BATCH_EMBED_URL}?key=${process.env.GEMINI_API_KEY}`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ input: texts, model: MODEL }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      requests: texts.map((text) => ({
+        model: `models/${EMBED_MODEL}`,
+        content: { parts: [{ text }] },
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+      })),
+    }),
   })
 
   if (!res.ok) {
-    throw new Error(`Voyage embeddings request failed: ${res.status} ${await res.text()}`)
+    throw new Error(`Gemini batchEmbedContents request failed: ${res.status} ${await res.text()}`)
   }
 
-  const data = (await res.json()) as { data: { embedding: number[] }[] }
-  return data.data.map((d) => d.embedding)
+  const data = (await res.json()) as { embeddings: { values: number[] }[] }
+  return data.embeddings.map((e) => e.values)
 }

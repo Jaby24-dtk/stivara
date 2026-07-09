@@ -73,7 +73,7 @@ create table if not exists public.doc_chunks (
   company_id uuid not null references public.companies(id) on delete cascade,
   chunk_index integer not null,
   content text not null,
-  embedding vector(1024),
+  embedding vector(768),
   created_at timestamptz default now()
 );
 
@@ -84,7 +84,7 @@ create index if not exists doc_chunks_embedding_idx on public.doc_chunks
 -- (called via the service-role client, so it intentionally bypasses RLS —
 -- the caller is trusted to have already checked the requester's org access).
 create or replace function public.match_doc_chunks(
-  query_embedding vector(1024),
+  query_embedding vector(768),
   match_company_id uuid,
   match_count int default 6
 )
