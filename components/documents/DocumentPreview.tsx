@@ -3,14 +3,16 @@
 // and it's laid out like a document (serif, letter-width, paper card)
 // instead of a monospace debug dump.
 function renderLine(line: string, key: number) {
-  const parts = line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean)
+  // Match **bold** before single *italic* so bold pairs aren't split by the
+  // italic pattern first.
+  const parts = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean)
   const isHeading = /^\*\*.+\*\*$/.test(line.trim()) && line.trim().length < 80
 
-  const content = parts.map((part, i) =>
-    part.startsWith('**') && part.endsWith('**')
-      ? <strong key={i}>{part.slice(2, -2)}</strong>
-      : part
-  )
+  const content = parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (part.startsWith('*') && part.endsWith('*')) return <em key={i}>{part.slice(1, -1)}</em>
+    return part
+  })
 
   if (line.trim() === '') return <div key={key} className="h-3" />
   if (isHeading) return <p key={key} className="text-center font-semibold text-slate-900 mb-1">{content}</p>
