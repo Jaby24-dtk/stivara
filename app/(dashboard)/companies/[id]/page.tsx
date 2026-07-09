@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Company, ComplianceEvent, Document, Person, RoleAssignment, Task } from '@/lib/types'
@@ -108,7 +109,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <ul className="flex flex-col gap-2">
             {taskList.map((t) => (
               <li key={t.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
-                <span className="text-slate-700">{t.title}</span>
+                <Link href={`/tasks/${t.id}`} className="text-slate-700 hover:text-teal-700">{t.title}</Link>
                 <div className="flex items-center gap-3">
                   {t.due_date && <span className="text-slate-500">{t.due_date}</span>}
                   <TaskStatusSelect taskId={t.id} status={t.status} />
