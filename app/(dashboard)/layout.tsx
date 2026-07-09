@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
         <div className="card max-w-md p-8 text-center">
-          <h1 className="text-lg font-semibold text-slate-900 mb-2">Supabase not configured</h1>
+          <h1 className="text-lg font-bold text-slate-900 mb-2">Supabase not configured</h1>
           <p className="text-sm text-slate-500">
             Add your Supabase project credentials to <code>.env.local</code> and run{' '}
             <code>supabase/schema.sql</code> to enable the dashboard.

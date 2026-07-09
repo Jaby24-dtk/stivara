@@ -31,13 +31,13 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Portfolio</h1>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Portfolio</h1>
         <p className="text-sm text-slate-500">{companyList.length} companies under management</p>
       </div>
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-slate-900">Companies</h2>
+          <h2 className="text-lg font-bold text-slate-900">Companies</h2>
           <Link href="/companies" className="btn-secondary btn-sm">View all</Link>
         </div>
         {companyList.length === 0 ? (
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Upcoming compliance deadlines</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Upcoming compliance deadlines</h2>
         {upcoming.length === 0 ? (
           <p className="text-sm text-slate-500">Nothing due — add companies to generate a compliance calendar.</p>
         ) : (

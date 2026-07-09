@@ -39,7 +39,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">{companyRow.name}</h1>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
         <p className="text-sm text-slate-500">
           {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
         </p>
@@ -47,7 +47,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-slate-900">People</h2>
+          <h2 className="text-lg font-bold text-slate-900">People</h2>
           <AddPersonButton companyId={id} />
         </div>
         {roleAssignmentList.length === 0 ? (
@@ -71,7 +71,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Compliance calendar</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Compliance calendar</h2>
         {eventList.length === 0 ? (
           <p className="text-sm text-slate-500">No compliance events on record.</p>
         ) : (
@@ -88,7 +88,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold text-slate-900 mb-4">Tasks</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Tasks</h2>
         {taskList.length === 0 ? (
           <p className="text-sm text-slate-500">No tasks yet.</p>
         ) : (
@@ -107,7 +107,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="card p-6">
-        <h2 className="font-semibold text-slate-900 mb-1">Draft a resolution</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-1">Draft a resolution</h2>
         <p className="text-sm text-slate-500 mb-4">
           Describe what you need in plain English — the AI Company Secretary will draft it and flag the correct approval type.
         </p>
@@ -116,7 +116,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-slate-900">Documents</h2>
+          <h2 className="text-lg font-bold text-slate-900">Documents</h2>
           <UploadDocumentButton companyId={id} />
         </div>
         {documentList.length === 0 ? (

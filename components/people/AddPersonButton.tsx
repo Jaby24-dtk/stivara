@@ -16,7 +16,7 @@ export function AddPersonButton({ companyId }: { companyId: string }) {
       {open && (
         <div className="modal-overlay" onClick={() => setOpen(false)}>
           <div className="modal-box p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-semibold text-slate-900 mb-4">Add person</h2>
+            <h2 className="text-lg font-bold text-slate-900 mb-4">Add person</h2>
             <NewPersonForm companyId={companyId} onDone={() => setOpen(false)} />
           </div>
         </div>

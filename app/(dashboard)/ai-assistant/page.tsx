@@ -10,7 +10,7 @@ export default async function AiAssistantPage() {
   return (
     <div className="flex flex-col gap-6 h-full">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">AI Assistant</h1>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">AI Assistant</h1>
         <p className="text-sm text-slate-500">Ask questions about a company&apos;s indexed documents. Answers cite their source excerpts.</p>
       </div>
       <AiChat companies={companyList} />

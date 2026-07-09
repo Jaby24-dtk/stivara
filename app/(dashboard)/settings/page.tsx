@@ -10,7 +10,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6 max-w-lg">
-      <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
+      <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Settings</h1>
       <div className="card p-6 flex flex-col gap-3">
         <div>
           <p className="text-xs text-slate-500">Organization</p>

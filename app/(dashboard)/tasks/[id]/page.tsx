@@ -45,7 +45,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           </Link>
         )}
         <div className="flex items-center justify-between mt-2">
-          <h1 className="text-2xl font-semibold text-slate-900">{taskRow.title}</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{taskRow.title}</h1>
           <TaskStatusSelect taskId={taskRow.id} status={taskRow.status} />
         </div>
         {taskRow.due_date && <p className="text-sm text-slate-500 mt-1">Due {taskRow.due_date}</p>}
@@ -53,7 +53,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
 
       {checklist.length > 0 && (
         <div className="card p-6">
-          <h2 className="font-semibold text-slate-900 mb-4">Checklist</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Checklist</h2>
           <ul className="flex flex-col gap-2">
             {checklist.map((step, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-slate-700 py-1">
@@ -130,7 +130,7 @@ async function AgmNoticeCard({
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-slate-900">Draft AGM Notice</h2>
+        <h2 className="text-lg font-bold text-slate-900">Draft AGM Notice</h2>
         <DownloadTextButton filename={`${companyName}-notice.txt`} content={notice} />
       </div>
       <DocumentPreview content={notice} />
@@ -167,7 +167,7 @@ async function AnnualReturnCard({
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-slate-900">Annual Return Filing Summary</h2>
+        <h2 className="text-lg font-bold text-slate-900">Annual Return Filing Summary</h2>
         <DownloadTextButton filename={`${companyName}-annual-return-summary.txt`} content={summary} />
       </div>
       <DocumentPreview content={summary} />
@@ -178,7 +178,7 @@ async function AnnualReturnCard({
 function DocumentLoadingSkeleton({ title }: { title: string }) {
   return (
     <div className="card p-6">
-      <h2 className="font-semibold text-slate-900 mb-4">{title}</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-4">{title}</h2>
       <div className="max-w-2xl mx-auto flex flex-col gap-3 animate-pulse">
         <div className="h-4 bg-slate-100 rounded w-1/2 mx-auto" />
         <div className="h-4 bg-slate-100 rounded w-1/3 mx-auto" />

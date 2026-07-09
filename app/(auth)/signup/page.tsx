@@ -57,7 +57,7 @@ export default function SignupPage() {
 
   return (
     <Centered>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-1">Create your Stivara workspace</h1>
+      <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Create your Stivara workspace</h1>
       <p className="text-sm text-slate-500 mb-6">For corporate secretarial firms and self-serve companies.</p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input className="input-field" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />

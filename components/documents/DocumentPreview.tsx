@@ -19,12 +19,12 @@ function renderLine(rawLine: string, key: number) {
 
   const headingMatch = line.match(/^#{1,3}\s+(.+)$/)
   if (headingMatch) {
-    return <p key={key} className="font-semibold text-slate-900 mt-3 mb-1">{renderInline(headingMatch[1])}</p>
+    return <p key={key} className="text-lg font-bold text-slate-900 mt-3 mb-1">{renderInline(headingMatch[1])}</p>
   }
 
   const isBoldHeading = /^\*\*.+\*\*$/.test(line) && line.length < 80
   if (isBoldHeading) {
-    return <p key={key} className="text-center font-semibold text-slate-900 mb-1">{renderInline(line)}</p>
+    return <p key={key} className="text-center text-lg font-bold text-slate-900 mb-1">{renderInline(line)}</p>
   }
 
   return <p key={key} className="mb-1">{renderInline(line)}</p>

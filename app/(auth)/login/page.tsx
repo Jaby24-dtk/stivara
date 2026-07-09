@@ -41,7 +41,7 @@ export default function LoginPage() {
 
   return (
     <Centered>
-      <h1 className="text-2xl font-semibold text-slate-900 mb-1">Sign in to Stivara</h1>
+      <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Sign in to Stivara</h1>
       <p className="text-sm text-slate-500 mb-6">Your corporate secretary, in software.</p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input

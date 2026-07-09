@@ -22,7 +22,7 @@ export default async function CompliancePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Compliance calendar</h1>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Compliance calendar</h1>
         <p className="text-sm text-slate-500">Singapore statutory deadlines, auto-generated from each company&apos;s FYE.</p>
       </div>
 
