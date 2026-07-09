@@ -6,6 +6,7 @@ import { UploadDocumentButton } from '@/components/documents/UploadDocumentButto
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { AddPersonButton } from '@/components/people/AddPersonButton'
 import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
+import { DirectorAppointmentWizard } from '@/components/people/DirectorAppointmentWizard'
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
 import { computeCompanyHealth, type HealthStatus } from '@/lib/compliance/health'
 
@@ -86,7 +87,10 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">People</h2>
-          <AddPersonButton companyId={id} />
+          <div className="flex items-center gap-2">
+            <DirectorAppointmentWizard companyId={id} />
+            <AddPersonButton companyId={id} />
+          </div>
         </div>
         {roleAssignmentList.length === 0 ? (
           <p className="text-sm text-slate-500">No directors, shareholders, or officers on record yet.</p>
