@@ -7,12 +7,25 @@ import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { AddPersonButton } from '@/components/people/AddPersonButton'
 import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
+import { computeCompanyHealth, type HealthStatus } from '@/lib/compliance/health'
 
 const roleLabel: Record<RoleAssignment['role'], string> = {
   director: 'Director',
   shareholder: 'Shareholder',
   officer: 'Officer',
   beneficial_owner: 'Beneficial owner',
+}
+
+const healthBadge: Record<HealthStatus, string> = {
+  green: 'badge-success',
+  amber: 'badge-warning',
+  red: 'badge-danger',
+}
+
+const healthLabel: Record<HealthStatus, string> = {
+  green: 'Healthy',
+  amber: 'Needs attention',
+  red: 'At risk',
 }
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,14 +49,39 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   type RoleAssignmentRow = RoleAssignment & { people: Pick<Person, 'name' | 'email'> | null }
   const roleAssignmentList = (roleAssignments ?? []) as unknown as RoleAssignmentRow[]
 
+  const health = computeCompanyHealth({
+    events: eventList,
+    tasks: taskList,
+    directorCount: roleAssignmentList.filter((r) => r.role === 'director').length,
+  })
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
-        <p className="text-sm text-slate-500">
-          {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
+          <p className="text-sm text-slate-500">
+            {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
+          </p>
+        </div>
+        <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
       </div>
+
+      {health.reasons.length > 0 && (
+        <div className="card p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Compliance health</h2>
+          <ul className="flex flex-col gap-2">
+            {health.reasons.map((r, i) => (
+              <li key={i} className="flex items-center gap-3 text-sm py-1">
+                <span className={`badge ${r.severity === 'red' ? 'badge-danger' : 'badge-warning'}`}>
+                  {r.severity === 'red' ? 'overdue' : 'due soon'}
+                </span>
+                <span className="text-slate-700">{r.message}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
