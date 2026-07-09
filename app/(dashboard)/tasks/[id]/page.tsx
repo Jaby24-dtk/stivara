@@ -8,6 +8,7 @@ import { DownloadTextButton } from '@/components/documents/DownloadTextButton'
 import { DocumentPreview } from '@/components/documents/DocumentPreview'
 import { getChecklist } from '@/lib/compliance/checklists'
 import { generateAgmNotice } from '@/lib/documents/agmNotice'
+import { generateAnnualReturnSummary } from '@/lib/documents/annualReturnSummary'
 
 export default async function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,12 +16,12 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
 
   const { data: task } = await supabase
     .from('tasks')
-    .select('*, companies(id, name, jurisdiction)')
+    .select('*, companies(id, name, jurisdiction, fye)')
     .eq('id', id)
     .single()
   if (!task) notFound()
 
-  type TaskRow = Task & { companies: Pick<Company, 'id' | 'name' | 'jurisdiction'> | null }
+  type TaskRow = Task & { companies: Pick<Company, 'id' | 'name' | 'jurisdiction' | 'fye'> | null }
   const taskRow = task as unknown as TaskRow
 
   let event: ComplianceEvent | null = null
@@ -65,12 +66,24 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
       )}
 
       {event?.type === 'AGM' && taskRow.companies && (
-        <Suspense fallback={<NoticeLoadingSkeleton />}>
+        <Suspense fallback={<DocumentLoadingSkeleton title="Draft AGM Notice" />}>
           <AgmNoticeCard
             companyId={taskRow.companies.id}
             companyName={taskRow.companies.name}
             jurisdiction={taskRow.companies.jurisdiction}
             agmDate={event.due_date}
+          />
+        </Suspense>
+      )}
+
+      {event?.type === 'Annual Return (BizFile+)' && taskRow.companies && (
+        <Suspense fallback={<DocumentLoadingSkeleton title="Annual Return Filing Summary" />}>
+          <AnnualReturnCard
+            companyId={taskRow.companies.id}
+            companyName={taskRow.companies.name}
+            jurisdiction={taskRow.companies.jurisdiction}
+            fye={taskRow.companies.fye}
+            dueDate={event.due_date}
           />
         </Suspense>
       )}
@@ -86,9 +99,10 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
   )
 }
 
-// Drafting the AGM notice is a live AI call that can take several seconds —
-// isolated in its own Suspense boundary so it doesn't block the rest of the
-// page (checklist, status) from rendering immediately.
+// Both cards below run a live AI call that can take several seconds — each
+// is isolated in its own Suspense boundary so it doesn't block the rest of
+// the page (checklist, status) from rendering immediately.
+
 async function AgmNoticeCard({
   companyId,
   companyName,
@@ -124,10 +138,47 @@ async function AgmNoticeCard({
   )
 }
 
-function NoticeLoadingSkeleton() {
+async function AnnualReturnCard({
+  companyId,
+  companyName,
+  jurisdiction,
+  fye,
+  dueDate,
+}: {
+  companyId: string
+  companyName: string
+  jurisdiction: string
+  fye: string
+  dueDate: string
+}) {
+  const supabase = await createClient()
+  const { data: roleRows } = await supabase
+    .from('role_assignments')
+    .select('role, people(name)')
+    .eq('company_id', companyId)
+    .is('end_date', null)
+  const people = (roleRows ?? []).map((r) => ({
+    name: (r.people as unknown as { name: string } | null)?.name ?? 'Unknown',
+    role: r.role as string,
+  }))
+
+  const summary = await generateAnnualReturnSummary({ companyName, jurisdiction, dueDate, fye, people })
+
   return (
     <div className="card p-6">
-      <h2 className="font-semibold text-slate-900 mb-4">Draft AGM Notice</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-slate-900">Annual Return Filing Summary</h2>
+        <DownloadTextButton filename={`${companyName}-annual-return-summary.txt`} content={summary} />
+      </div>
+      <DocumentPreview content={summary} />
+    </div>
+  )
+}
+
+function DocumentLoadingSkeleton({ title }: { title: string }) {
+  return (
+    <div className="card p-6">
+      <h2 className="font-semibold text-slate-900 mb-4">{title}</h2>
       <div className="max-w-2xl mx-auto flex flex-col gap-3 animate-pulse">
         <div className="h-4 bg-slate-100 rounded w-1/2 mx-auto" />
         <div className="h-4 bg-slate-100 rounded w-1/3 mx-auto" />

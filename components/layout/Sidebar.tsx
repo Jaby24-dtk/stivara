@@ -26,10 +26,21 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
   }
 
   return (
-    <aside className="w-64 shrink-0 bg-[#0F172A] flex flex-col p-4 min-h-screen">
-      <div className="px-2 py-3 mb-4">
-        <p className="text-white font-semibold text-lg">Stivara</p>
-        <p className="text-slate-400 text-xs truncate">{orgName}</p>
+    <aside
+      className="w-64 shrink-0 flex flex-col p-4 min-h-screen"
+      style={{ background: 'linear-gradient(180deg, #0B1220 0%, #0F1A2E 100%)' }}
+    >
+      <div className="px-2 py-3 mb-4 flex items-center gap-2.5">
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: 'linear-gradient(135deg, #14B8A6, #0B5C55)', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }}
+        >
+          <span className="text-white text-xs font-bold">S</span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-white font-semibold text-[15px] tracking-tight leading-tight">Stivara</p>
+          <p className="text-slate-400 text-xs truncate leading-tight">{orgName}</p>
+        </div>
       </div>
       <nav className="flex flex-col gap-1 flex-1">
         {links.map(({ href, label, icon: Icon }) => (
@@ -43,7 +54,7 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
           </Link>
         ))}
       </nav>
-      <div className="border-t border-slate-700 pt-3 mt-3">
+      <div className="border-t border-white/10 pt-3 mt-3">
         <p className="text-slate-400 text-xs px-2 mb-2 truncate">{userName}</p>
         <button onClick={handleSignOut} className="sidebar-link w-full">
           <LogOut size={16} />
