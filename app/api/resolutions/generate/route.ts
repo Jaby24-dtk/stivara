@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
-import { isGeminiConfigured } from '@/lib/ai/gemini'
+import { isGeminiConfigured, isGeminiRateLimitError, GEMINI_RATE_LIMIT_MESSAGE } from '@/lib/ai/gemini'
 import { generateResolution } from '@/lib/ai/resolutionGenerator'
 
 export async function POST(request: Request) {
@@ -50,6 +50,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ draft })
   } catch (err) {
     console.error('Resolution generation failed:', err)
+    if (isGeminiRateLimitError(err)) {
+      return NextResponse.json({ error: GEMINI_RATE_LIMIT_MESSAGE }, { status: 429 })
+    }
     return NextResponse.json({ error: 'Drafting failed. Please try again.' }, { status: 502 })
   }
 }

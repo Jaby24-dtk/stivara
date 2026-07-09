@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
-import { isGeminiConfigured } from '@/lib/ai/gemini'
+import { isGeminiConfigured, isGeminiRateLimitError, GEMINI_RATE_LIMIT_MESSAGE } from '@/lib/ai/gemini'
 import { isEmbeddingsConfigured } from '@/lib/ai/embeddings'
 import { search } from '@/lib/ai/documentSearch'
 
@@ -37,6 +37,9 @@ export async function POST(request: Request) {
     return NextResponse.json(result)
   } catch (err) {
     console.error('AI Assistant search failed:', err)
+    if (isGeminiRateLimitError(err)) {
+      return NextResponse.json({ error: GEMINI_RATE_LIMIT_MESSAGE }, { status: 429 })
+    }
     return NextResponse.json({ error: 'The AI Assistant hit an error answering that. Please try again.' }, { status: 502 })
   }
 }

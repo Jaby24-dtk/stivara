@@ -40,3 +40,13 @@ export async function chat(params: {
 
   return response.text ?? ''
 }
+
+// Gemini's free tier caps gemini-2.5-flash at 20 requests/day (a hard quota,
+// not a transient blip) — surface that distinctly so a 429 doesn't read the
+// same as a generic failure the user might retry expecting a different result.
+export function isGeminiRateLimitError(err: unknown): boolean {
+  return (err as { status?: number })?.status === 429
+}
+
+export const GEMINI_RATE_LIMIT_MESSAGE =
+  "Gemini's free-tier daily limit (20 requests/day) has been hit. Try again once it resets, or switch to a paid key for unlimited use."
