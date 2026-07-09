@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -34,26 +35,6 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
 
   const checklist = event ? getChecklist(event.type) : []
 
-  let notice: string | null = null
-  if (event?.type === 'AGM' && taskRow.companies) {
-    const { data: directorRows } = await supabase
-      .from('role_assignments')
-      .select('people(name)')
-      .eq('company_id', taskRow.companies.id)
-      .eq('role', 'director')
-      .is('end_date', null)
-    const directors = (directorRows ?? [])
-      .map((r) => (r.people as unknown as { name: string } | null)?.name)
-      .filter((name): name is string => !!name)
-
-    notice = await generateAgmNotice({
-      companyName: taskRow.companies.name,
-      jurisdiction: taskRow.companies.jurisdiction,
-      agmDate: event.due_date,
-      directors,
-    })
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -83,14 +64,15 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
 
-      {notice && (
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-900">Draft AGM Notice</h2>
-            <DownloadTextButton filename={`${taskRow.companies?.name ?? 'agm'}-notice.txt`} content={notice} />
-          </div>
-          <DocumentPreview content={notice} />
-        </div>
+      {event?.type === 'AGM' && taskRow.companies && (
+        <Suspense fallback={<NoticeLoadingSkeleton />}>
+          <AgmNoticeCard
+            companyId={taskRow.companies.id}
+            companyName={taskRow.companies.name}
+            jurisdiction={taskRow.companies.jurisdiction}
+            agmDate={event.due_date}
+          />
+        </Suspense>
       )}
 
       {checklist.length === 0 && (
@@ -100,6 +82,60 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           </p>
         </div>
       )}
+    </div>
+  )
+}
+
+// Drafting the AGM notice is a live AI call that can take several seconds —
+// isolated in its own Suspense boundary so it doesn't block the rest of the
+// page (checklist, status) from rendering immediately.
+async function AgmNoticeCard({
+  companyId,
+  companyName,
+  jurisdiction,
+  agmDate,
+}: {
+  companyId: string
+  companyName: string
+  jurisdiction: string
+  agmDate: string
+}) {
+  const supabase = await createClient()
+  const { data: directorRows } = await supabase
+    .from('role_assignments')
+    .select('people(name)')
+    .eq('company_id', companyId)
+    .eq('role', 'director')
+    .is('end_date', null)
+  const directors = (directorRows ?? [])
+    .map((r) => (r.people as unknown as { name: string } | null)?.name)
+    .filter((name): name is string => !!name)
+
+  const notice = await generateAgmNotice({ companyName, jurisdiction, agmDate, directors })
+
+  return (
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-slate-900">Draft AGM Notice</h2>
+        <DownloadTextButton filename={`${companyName}-notice.txt`} content={notice} />
+      </div>
+      <DocumentPreview content={notice} />
+    </div>
+  )
+}
+
+function NoticeLoadingSkeleton() {
+  return (
+    <div className="card p-6">
+      <h2 className="font-semibold text-slate-900 mb-4">Draft AGM Notice</h2>
+      <div className="max-w-2xl mx-auto flex flex-col gap-3 animate-pulse">
+        <div className="h-4 bg-slate-100 rounded w-1/2 mx-auto" />
+        <div className="h-4 bg-slate-100 rounded w-1/3 mx-auto" />
+        <div className="h-4 bg-slate-100 rounded w-full mt-4" />
+        <div className="h-4 bg-slate-100 rounded w-5/6" />
+        <div className="h-4 bg-slate-100 rounded w-4/6" />
+      </div>
+      <p className="text-xs text-slate-400 text-center mt-4">Drafting with AI — this can take a few seconds…</p>
     </div>
   )
 }

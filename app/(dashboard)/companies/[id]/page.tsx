@@ -22,27 +22,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   const { data: company } = await supabase.from('companies').select('*').eq('id', id).single()
   if (!company) notFound()
 
-  const { data: events } = await supabase
-    .from('compliance_events')
-    .select('*')
-    .eq('company_id', id)
-    .order('due_date')
-  const { data: tasks } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('company_id', id)
-    .order('due_date', { ascending: true, nullsFirst: false })
-  const { data: documents } = await supabase
-    .from('documents')
-    .select('*')
-    .eq('company_id', id)
-    .order('created_at', { ascending: false })
-  const { data: roleAssignments } = await supabase
-    .from('role_assignments')
-    .select('*, people(name, email)')
-    .eq('company_id', id)
-    .is('end_date', null)
-    .order('start_date')
+  const [{ data: events }, { data: tasks }, { data: documents }, { data: roleAssignments }] = await Promise.all([
+    supabase.from('compliance_events').select('*').eq('company_id', id).order('due_date'),
+    supabase.from('tasks').select('*').eq('company_id', id).order('due_date', { ascending: true, nullsFirst: false }),
+    supabase.from('documents').select('*').eq('company_id', id).order('created_at', { ascending: false }),
+    supabase.from('role_assignments').select('*, people(name, email)').eq('company_id', id).is('end_date', null).order('start_date'),
+  ])
 
   const companyRow = company as Company
   const eventList = (events ?? []) as ComplianceEvent[]
