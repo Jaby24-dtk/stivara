@@ -2,46 +2,77 @@ import { format } from 'date-fns'
 import { chat, isGeminiConfigured } from '@/lib/ai/gemini'
 
 const DISCLAIMER =
-  'DRAFT — this notice has not been reviewed by a licensed corporate secretary or lawyer. Confirm the statutory notice period for your jurisdiction before sending to members.'
+  'DRAFT — this notice has not been reviewed by a licensed corporate secretary or lawyer. Confirm the statutory notice period, time, and venue before sending to members.'
 
-const SYSTEM_PROMPT = `You are the Stivara AI Company Secretary, drafting a Notice of Annual General
-Meeting for a Singapore private limited company. Rules:
+const SYSTEM_PROMPT = `You are the Stivara AI Company Secretary, drafting a full Notice of Annual
+General Meeting for a Singapore private limited company, in the standard form a corporate
+secretarial firm actually produces — not an abbreviated summary. Every time, include:
 
-1. Use the standard SG AGM notice structure: heading, "NOTICE IS HEREBY
-   GIVEN...", ordinary business items (adopt financial statements/directors'
-   report, re-elect directors retiring by rotation, re-appoint auditors,
-   any other ordinary business), "By Order of the Board" sign-off.
-2. If specific directors are listed in the company context, name the ones
-   retiring by rotation explicitly rather than leaving it generic — for a
-   private company with a small board, assume all listed directors are
-   subject to rotation unless told otherwise, and say so.
-3. If no directors are on record, say plainly that director details should
-   be added before this notice is finalized — do not invent names.
-4. End with this exact line on its own: "${DISCLAIMER}"
+1. **Header block**: "NOTICE OF ANNUAL GENERAL MEETING" in caps, then the company name in
+   caps, "(Company Registration No. [UEN — to be inserted])", and
+   "(Incorporated in the Republic of Singapore)" on their own lines.
+2. **Opening**: "NOTICE IS HEREBY GIVEN that the Annual General Meeting of the Company will
+   be held at [venue — e.g. the registered office, to be inserted] on [date] at [time — to
+   be inserted] for the following purposes:"
+3. **ORDINARY BUSINESS** — numbered as "Ordinary Resolution 1", "Ordinary Resolution 2" etc.,
+   each with the FULL resolution text, not just a description:
+   - To receive and adopt the Directors' Report and Audited Financial Statements for the
+     financial year ended [FYE], together with the Auditors' Report.
+   - To re-elect the director(s) retiring by rotation. If specific directors are in the
+     company context, name them explicitly and state they retire and, being eligible, offer
+     themselves for re-election. If none are on record, say plainly that director details
+     need to be added before finalizing, in NOTES — do not invent a name.
+   - To re-appoint the Auditors and authorize the Directors to fix their remuneration.
+   - To transact any other ordinary business.
+4. **NOTES section** covering, in plain language: (a) a member entitled to attend and vote
+   may appoint a proxy who need not also be a member, (b) the instrument appointing a proxy
+   must be lodged at the registered office not less than 48 hours before the meeting (state
+   this is the common default and should be confirmed against the company's constitution),
+   (c) where the AGM is dispensed with or exempted under s175A, this notice would not apply
+   — only include this note if the context doesn't confirm an AGM is actually being held.
+5. **Sign-off**: "By Order of the Board", then a blank signature line, "[Name]", "Company
+   Secretary", the company name, and "Singapore, [date of notice — to be inserted]".
+6. **NOTES ON DRAFTING** (separate from the notice's own Notes section): flag anything you
+   couldn't fill in with real data (venue, time, company secretary's name, notice date).
+7. End with this exact line on its own: "${DISCLAIMER}"
 
-Keep the tone formal and precise, matching how a Singapore corporate secretary would draft it.
-Use **bold** only for the document title and section headers.`
+Use **bold** for the header block and section labels only. Formal, precise tone — this should
+read like a real firm produced it, not a summary of one.`
 
 function staticFallback(params: { companyName: string; agmDate: string }): string {
   const formattedDate = format(new Date(params.agmDate), 'd MMMM yyyy')
   return `**NOTICE OF ANNUAL GENERAL MEETING**
 
 **${params.companyName.toUpperCase()}**
+(Company Registration No. [UEN — to be inserted])
+(Incorporated in the Republic of Singapore)
 
-NOTICE IS HEREBY GIVEN that the Annual General Meeting of the Company will be held on ${formattedDate} for the following purposes:
+NOTICE IS HEREBY GIVEN that the Annual General Meeting of the Company will be held at [venue — to be inserted] on ${formattedDate} at [time — to be inserted] for the following purposes:
 
 **ORDINARY BUSINESS**
 
-1. To receive and adopt the Directors' Report and Audited Financial Statements for the financial year.
-2. To re-elect Directors retiring by rotation (if applicable).
-3. To re-appoint the Auditors and authorize the Directors to fix their remuneration.
-4. To transact any other ordinary business of the Company.
+Ordinary Resolution 1
+To receive and adopt the Directors' Report and Audited Financial Statements for the financial year, together with the Auditors' Report.
+
+Ordinary Resolution 2
+To re-elect the director(s) retiring by rotation.
+
+Ordinary Resolution 3
+To re-appoint the Auditors and authorize the Directors to fix their remuneration.
+
+Ordinary Resolution 4
+To transact any other ordinary business of the Company.
+
+**NOTES**
+A member entitled to attend and vote is entitled to appoint a proxy who need not also be a member. The instrument appointing a proxy must be lodged at the registered office not less than 48 hours before the meeting (confirm this against the Company's constitution).
 
 By Order of the Board
 
+_________________________
 [Name]
 Company Secretary
 ${params.companyName}
+Singapore, [date of notice — to be inserted]
 
 ${DISCLAIMER}`
 }
@@ -64,7 +95,7 @@ AGM date: ${formattedDate}
 Current directors on record: ${directorContext}`
 
   try {
-    const draft = await chat({ system: SYSTEM_PROMPT, messages: [{ role: 'user', content: userMessage }], maxTokens: 1024 })
+    const draft = await chat({ system: SYSTEM_PROMPT, messages: [{ role: 'user', content: userMessage }], maxTokens: 2048 })
     return draft || staticFallback(params)
   } catch (err) {
     console.error('AGM notice generation failed, using static fallback:', err)
