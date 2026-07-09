@@ -29,7 +29,12 @@ export async function chat(params: {
     })),
     config: {
       systemInstruction: params.system,
-      maxOutputTokens: params.maxTokens ?? 1024,
+      // maxOutputTokens is a shared budget across thinking + the visible
+      // answer — a small cap can let thinking eat the whole budget and
+      // truncate the actual response, so cap thinking separately and give
+      // the visible output its own headroom on top.
+      thinkingConfig: { thinkingBudget: 512 },
+      maxOutputTokens: (params.maxTokens ?? 1024) + 512,
     },
   })
 
