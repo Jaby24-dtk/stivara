@@ -6,6 +6,7 @@ import { UploadDocumentButton } from '@/components/documents/UploadDocumentButto
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { AddPersonButton } from '@/components/people/AddPersonButton'
 import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
+import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
 
 const roleLabel: Record<RoleAssignment['role'], string> = {
   director: 'Director',
@@ -118,6 +119,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="card p-6">
+        <h2 className="font-semibold text-slate-900 mb-1">Draft a resolution</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Describe what you need in plain English — the AI Company Secretary will draft it and flag the correct approval type.
+        </p>
+        <ResolutionGenerator companyId={id} companyName={companyRow.name} />
       </div>
 
       <div className="card p-6">
