@@ -52,11 +52,11 @@ h1, h2, h3 {
   position: relative;
 }
 
-.sidebar-link:hover { background: rgba(20,184,166,0.08); color: #5EEAD4; }
+.sidebar-link:hover { background: rgba(201,162,39,0.08); color: var(--gold-light); }
 .sidebar-link:active { transform: scale(0.98); }
 .sidebar-link.active {
-  background: linear-gradient(90deg, rgba(20,184,166,0.16), rgba(20,184,166,0.05));
-  color: #5EEAD4;
+  background: linear-gradient(90deg, rgba(201,162,39,0.16), rgba(201,162,39,0.05));
+  color: var(--gold-light);
 }
 .sidebar-link.active::before {
   content: '';
@@ -67,8 +67,8 @@ h1, h2, h3 {
   width: 3px;
   height: 18px;
   border-radius: 2px;
-  background: #14B8A6;
-  box-shadow: 0 0 8px rgba(20,184,166,0.6);
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(201,162,39,0.6);
 }
 
 .badge {

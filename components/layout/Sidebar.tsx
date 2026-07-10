@@ -33,9 +33,9 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
       <div className="px-2 py-3 mb-4 flex items-center gap-2.5">
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: 'linear-gradient(135deg, #14B8A6, #0B5C55)', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }}
+          style={{ background: 'linear-gradient(135deg, #E8C766, #C9A227)', boxShadow: '0 0 12px rgba(201,162,39,0.35)' }}
         >
-          <span className="text-white text-xs font-bold">S</span>
+          <span className="text-xs font-bold" style={{ color: 'var(--navy)' }}>S</span>
         </div>
         <div className="min-w-0">
           <p className="text-white font-semibold text-[15px] tracking-tight leading-tight">Stivara</p>
