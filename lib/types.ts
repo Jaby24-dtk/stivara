@@ -28,6 +28,40 @@ export type Company = {
   paid_up_share_capital: number | null
   created_at: string
   updated_at: string
+
+  // Identity & registration (STIVARA_V2 Phase 1, Milestone 3)
+  uen: string | null
+  former_name: string | null
+  registered_office_address: string | null
+  principal_business_address: string | null
+  primary_ssic_code: string | null
+  primary_ssic_description: string | null
+  secondary_ssic_code: string | null
+  secondary_ssic_description: string | null
+  business_description: string | null
+  first_fye: string | null
+  constitution_adopted: boolean | null
+  company_seal_used: boolean | null
+  registration_status: 'live' | 'struck_off' | 'dissolved' | 'converted' | 'amalgamated' | 'in_liquidation' | 'other' | null
+
+  // Compliance classification & structure
+  is_private: boolean | null
+  is_exempt_private: boolean | null
+  is_foreign_entity: boolean | null
+  liability_type: 'limited_by_shares' | 'limited_by_guarantee' | 'unlimited' | 'other' | null
+  is_dormant: boolean | null
+  is_solvent: boolean | null
+  audit_exemption_status: 'exempt' | 'review_required' | 'not_exempt' | null
+  is_gst_registered: boolean | null
+  is_employer_registered: boolean | null
+  is_regulated_business: boolean | null
+  licensed_activities: string | null
+  is_csp_client: boolean | null
+  is_listed: boolean | null
+  is_charity_or_ipc: boolean | null
+  is_group_company: boolean | null
+  is_holding_company: boolean | null
+  parent_company_id: string | null
 }
 
 export type ComplianceEvent = {

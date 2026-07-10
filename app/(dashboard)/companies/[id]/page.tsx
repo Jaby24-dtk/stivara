@@ -112,6 +112,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </div>
         <div className="flex items-center gap-2">
           <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
+          <Link href={`/companies/${id}/settings`} className="btn-secondary btn-sm">Full profile</Link>
           <EditCompanyButton company={companyRow} />
           <DeleteCompanyButton companyId={id} companyName={companyRow.name} />
         </div>

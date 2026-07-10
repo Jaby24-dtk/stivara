@@ -373,3 +373,68 @@ alter table public.role_assignments add constraint role_assignments_role_check c
   'nominee_director', 'nominee_shareholder', 'registrable_controller', 'company_secretary',
   'ceo', 'auditor', 'dpo', 'tax_agent', 'accountant', 'authorised_filing_agent', 'bank_signatory'
 ));
+
+-- ---------------------------------------------------------------------------
+-- STIVARA_V2 Phase 1, Milestone 3 — Company profile expansion
+-- Two groups: identity/registration, then compliance classification/
+-- structure. registration_status is deliberately separate from the existing
+-- `status` column (green/amber/red computed health, see lib/compliance/
+-- health.ts) — conflating the two would recreate the exact naming collision
+-- this migration otherwise avoids.
+-- ---------------------------------------------------------------------------
+
+-- Group A — Identity & registration
+alter table public.companies add column if not exists uen text;
+alter table public.companies add column if not exists former_name text;
+alter table public.companies add column if not exists registered_office_address text;
+alter table public.companies add column if not exists principal_business_address text;
+alter table public.companies add column if not exists primary_ssic_code text;
+alter table public.companies add column if not exists primary_ssic_description text;
+alter table public.companies add column if not exists secondary_ssic_code text;
+alter table public.companies add column if not exists secondary_ssic_description text;
+alter table public.companies add column if not exists business_description text;
+alter table public.companies add column if not exists first_fye date;
+alter table public.companies add column if not exists constitution_adopted boolean;
+alter table public.companies add column if not exists company_seal_used boolean;
+alter table public.companies add column if not exists registration_status text;
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'companies_registration_status_valid') then
+    alter table public.companies add constraint companies_registration_status_valid
+      check (registration_status is null or registration_status in
+        ('live', 'struck_off', 'dissolved', 'converted', 'amalgamated', 'in_liquidation', 'other'));
+  end if;
+end $$;
+
+-- Group B — Compliance classification & structure
+-- All booleans are nullable with NO default: null ("not yet captured") must
+-- stay distinguishable from an explicit false, which matters for compliance
+-- data (a false on is_solvent should never be an accident of a default).
+alter table public.companies add column if not exists is_private boolean;
+alter table public.companies add column if not exists is_exempt_private boolean;
+alter table public.companies add column if not exists is_foreign_entity boolean;
+alter table public.companies add column if not exists liability_type text;
+alter table public.companies add column if not exists is_dormant boolean;
+alter table public.companies add column if not exists is_solvent boolean;
+alter table public.companies add column if not exists audit_exemption_status text;
+alter table public.companies add column if not exists is_gst_registered boolean;
+alter table public.companies add column if not exists is_employer_registered boolean;
+alter table public.companies add column if not exists is_regulated_business boolean;
+alter table public.companies add column if not exists licensed_activities text;
+alter table public.companies add column if not exists is_csp_client boolean;
+alter table public.companies add column if not exists is_listed boolean;
+alter table public.companies add column if not exists is_charity_or_ipc boolean;
+alter table public.companies add column if not exists is_group_company boolean;
+alter table public.companies add column if not exists is_holding_company boolean;
+alter table public.companies add column if not exists parent_company_id uuid references public.companies(id) on delete set null;
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'companies_liability_type_valid') then
+    alter table public.companies add constraint companies_liability_type_valid
+      check (liability_type is null or liability_type in ('limited_by_shares', 'limited_by_guarantee', 'unlimited', 'other'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'companies_audit_exemption_valid') then
+    alter table public.companies add constraint companies_audit_exemption_valid
+      check (audit_exemption_status is null or audit_exemption_status in ('exempt', 'review_required', 'not_exempt'));
+  end if;
+end $$;

@@ -4,14 +4,53 @@ import { getCurrentUser } from '@/lib/auth'
 import { provisionComplianceEvents } from '@/lib/compliance/provisioning'
 import { logAudit } from '@/lib/audit/log'
 
+// camelCase request key -> snake_case column, for the ~28 profile fields
+// added in STIVARA_V2 Phase 1 Milestone 3 — declarative rather than a manual
+// `if (x !== undefined)` block per field. name/jurisdiction/fye keep their
+// own explicit validation below since they have real business logic (the
+// OTHER-jurisdiction check, non-empty name) a generic map would lose.
+const PROFILE_FIELD_MAP: Record<string, string> = {
+  uen: 'uen',
+  formerName: 'former_name',
+  registeredOfficeAddress: 'registered_office_address',
+  principalBusinessAddress: 'principal_business_address',
+  primarySsicCode: 'primary_ssic_code',
+  primarySsicDescription: 'primary_ssic_description',
+  secondarySsicCode: 'secondary_ssic_code',
+  secondarySsicDescription: 'secondary_ssic_description',
+  businessDescription: 'business_description',
+  firstFye: 'first_fye',
+  constitutionAdopted: 'constitution_adopted',
+  companySealUsed: 'company_seal_used',
+  registrationStatus: 'registration_status',
+  isPrivate: 'is_private',
+  isExemptPrivate: 'is_exempt_private',
+  isForeignEntity: 'is_foreign_entity',
+  liabilityType: 'liability_type',
+  isDormant: 'is_dormant',
+  isSolvent: 'is_solvent',
+  auditExemptionStatus: 'audit_exemption_status',
+  isGstRegistered: 'is_gst_registered',
+  isEmployerRegistered: 'is_employer_registered',
+  isRegulatedBusiness: 'is_regulated_business',
+  licensedActivities: 'licensed_activities',
+  isCspClient: 'is_csp_client',
+  isListed: 'is_listed',
+  isCharityOrIpc: 'is_charity_or_ipc',
+  isGroupCompany: 'is_group_company',
+  isHoldingCompany: 'is_holding_company',
+  parentCompanyId: 'parent_company_id',
+}
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { name, jurisdiction, jurisdictionOther, entityType, incorporationDate, fye } = await request.json()
+  const body = await request.json()
+  const { name, jurisdiction, jurisdictionOther, entityType, incorporationDate, fye } = body
 
-  const updates: Record<string, string | null> = {}
+  const updates: Record<string, unknown> = {}
   if (name !== undefined) {
     if (!name.trim()) return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 })
     updates.name = name
@@ -26,6 +65,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (entityType !== undefined) updates.entity_type = entityType || null
   if (incorporationDate !== undefined) updates.incorporation_date = incorporationDate || null
   if (fye !== undefined) updates.fye = fye
+
+  for (const [camelKey, column] of Object.entries(PROFILE_FIELD_MAP)) {
+    if (body[camelKey] !== undefined) {
+      updates[column] = body[camelKey] === '' ? null : body[camelKey]
+    }
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
