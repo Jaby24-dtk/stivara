@@ -52,7 +52,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .insert({ person_id: person.id, company_id: companyId, role: 'director', start_date: effective })
     .select()
     .single()
-  if (roleError) return NextResponse.json({ error: roleError.message }, { status: 400 })
+  if (roleError) {
+    // Supabase inserts here aren't wrapped in a real DB transaction (that
+    // needs a Postgres function, which needs a migration nobody's run) —
+    // so roll back by hand instead of leaving an orphaned person record
+    // that a retry would then duplicate.
+    await supabase.from('people').delete().eq('id', person.id)
+    return NextResponse.json({ error: roleError.message }, { status: 400 })
+  }
 
   const document = await generateDirectorAppointmentPack({
     companyName: company.name,
@@ -74,7 +81,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
     .select()
     .single()
-  if (taskError) return NextResponse.json({ error: taskError.message }, { status: 400 })
+  if (taskError) {
+    // Same reasoning as above: don't leave a director appointed with no
+    // ACRA filing-deadline task — a retry after this should start clean,
+    // not create a second person/role for the same appointment.
+    await supabase.from('role_assignments').delete().eq('id', roleAssignment.id)
+    await supabase.from('people').delete().eq('id', person.id)
+    return NextResponse.json({ error: taskError.message }, { status: 400 })
+  }
 
   return NextResponse.json({ person, roleAssignment, document, task })
 }

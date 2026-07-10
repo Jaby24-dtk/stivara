@@ -124,6 +124,37 @@ create table if not exists public.tasks (
   created_at timestamptz default now()
 );
 
+-- Ownership: extends existing tables rather than a new join table, since a
+-- shareholder role_assignment already ties a person to a company — a share
+-- count/class is just more detail on that same row.
+alter table public.role_assignments add column if not exists share_count integer;
+alter table public.role_assignments add column if not exists share_class text;
+alter table public.companies add column if not exists issued_share_capital numeric;
+alter table public.companies add column if not exists paid_up_share_capital numeric;
+
+-- Funding rounds (Corporate DNA — funding history)
+create table if not exists public.funding_rounds (
+  id uuid primary key default uuid_generate_v4(),
+  company_id uuid not null references public.companies(id) on delete cascade,
+  round_type text not null,
+  amount numeric not null check (amount >= 0),
+  currency text not null default 'SGD',
+  investor text,
+  closed_date date not null,
+  created_at timestamptz default now()
+);
+
+-- Milestones (Corporate DNA — legal/growth history)
+create table if not exists public.milestones (
+  id uuid primary key default uuid_generate_v4(),
+  company_id uuid not null references public.companies(id) on delete cascade,
+  category text not null check (category in ('legal', 'growth', 'other')),
+  title text not null,
+  description text,
+  event_date date not null,
+  created_at timestamptz default now()
+);
+
 -- Auto-update updated_at on companies
 create or replace function update_updated_at()
 returns trigger as $$
@@ -148,6 +179,8 @@ alter table public.documents enable row level security;
 alter table public.doc_chunks enable row level security;
 alter table public.compliance_events enable row level security;
 alter table public.tasks enable row level security;
+alter table public.funding_rounds enable row level security;
+alter table public.milestones enable row level security;
 
 create or replace function public.current_org_id()
 returns uuid as $$
@@ -209,6 +242,24 @@ create policy "Org members can read tasks" on public.tasks
     company_id in (select id from public.companies where organization_id = public.current_org_id())
   );
 create policy "Org members can write tasks" on public.tasks
+  for all using (
+    company_id in (select id from public.companies where organization_id = public.current_org_id())
+  );
+
+create policy "Org members can read funding_rounds" on public.funding_rounds
+  for select using (
+    company_id in (select id from public.companies where organization_id = public.current_org_id())
+  );
+create policy "Org members can write funding_rounds" on public.funding_rounds
+  for all using (
+    company_id in (select id from public.companies where organization_id = public.current_org_id())
+  );
+
+create policy "Org members can read milestones" on public.milestones
+  for select using (
+    company_id in (select id from public.companies where organization_id = public.current_org_id())
+  );
+create policy "Org members can write milestones" on public.milestones
   for all using (
     company_id in (select id from public.companies where organization_id = public.current_org_id())
   );

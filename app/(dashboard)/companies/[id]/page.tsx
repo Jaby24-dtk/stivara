@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Company, ComplianceEvent, Document, Person, RoleAssignment, Task } from '@/lib/types'
+import type { Company, ComplianceEvent, Document, FundingRound, Milestone, Person, RoleAssignment, Task } from '@/lib/types'
 import { UploadDocumentButton } from '@/components/documents/UploadDocumentButton'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { AddPersonButton } from '@/components/people/AddPersonButton'
@@ -10,6 +10,11 @@ import { DirectorAppointmentWizard } from '@/components/people/DirectorAppointme
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
 import { CorporateDoctorScan } from '@/components/companies/CorporateDoctorScan'
 import { CompanyTimeline } from '@/components/companies/CompanyTimeline'
+import { EditCapitalButton } from '@/components/companies/EditCapitalButton'
+import { EditShareholdingButton } from '@/components/companies/EditShareholdingButton'
+import { AddFundingRoundButton } from '@/components/companies/AddFundingRoundButton'
+import { AddMilestoneButton } from '@/components/companies/AddMilestoneButton'
+import { AiSuggestions } from '@/components/companies/AiSuggestions'
 import { computeCompanyHealth, computeMissionControl, deriveEventStatus, type EventStatus, type HealthStatus } from '@/lib/compliance/health'
 import { buildRecommendations } from '@/lib/compliance/recommendations'
 import { buildTimeline } from '@/lib/compliance/timeline'
@@ -47,22 +52,27 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   const { data: company } = await supabase.from('companies').select('*').eq('id', id).single()
   if (!company) notFound()
 
-  const [{ data: events }, { data: tasks }, { data: documents }, { data: roleAssignments }] = await Promise.all([
+  const [{ data: events }, { data: tasks }, { data: documents }, { data: roleAssignments }, { data: fundingRounds }, { data: milestones }] = await Promise.all([
     supabase.from('compliance_events').select('*').eq('company_id', id).order('due_date'),
     supabase.from('tasks').select('*').eq('company_id', id).order('due_date', { ascending: true, nullsFirst: false }),
     supabase.from('documents').select('*').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('role_assignments').select('*, people(name, email)').eq('company_id', id).order('start_date'),
+    supabase.from('funding_rounds').select('*').eq('company_id', id).order('closed_date', { ascending: false }),
+    supabase.from('milestones').select('*').eq('company_id', id).order('event_date', { ascending: false }),
   ])
 
   const companyRow = company as Company
   const eventList = (events ?? []) as ComplianceEvent[]
   const taskList = (tasks ?? []) as Task[]
   const documentList = (documents ?? []) as Document[]
+  const fundingRoundList = (fundingRounds ?? []) as FundingRound[]
+  const milestoneList = (milestones ?? []) as Milestone[]
   type RoleAssignmentRow = RoleAssignment & { people: Pick<Person, 'name' | 'email'> | null }
   // Includes past (resigned/removed) assignments too — needed for the
   // timeline's history. The People card below filters to active-only.
   const roleAssignmentList = (roleAssignments ?? []) as unknown as RoleAssignmentRow[]
   const activeRoleAssignmentList = roleAssignmentList.filter((r) => r.end_date === null)
+  const activeShareholders = activeRoleAssignmentList.filter((r) => r.role === 'shareholder')
 
   const directorCount = activeRoleAssignmentList.filter((r) => r.role === 'director').length
   const health = computeCompanyHealth({ events: eventList, tasks: taskList, directorCount })
@@ -78,6 +88,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       endDate: r.end_date,
     })),
     documents: documentList.map((d) => ({ name: d.name, createdAt: d.created_at })),
+    fundingRounds: fundingRoundList.map((f) => ({
+      roundType: f.round_type,
+      amount: f.amount,
+      currency: f.currency,
+      investor: f.investor,
+      closedDate: f.closed_date,
+    })),
+    milestones: milestoneList.map((m) => ({ category: m.category, title: m.title, eventDate: m.event_date })),
   })
 
   return (
@@ -103,6 +121,82 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           recommendations={recommendations}
         />
       </div>
+
+      <div className="card p-6 flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">Corporate DNA</h2>
+            <p className="text-sm text-slate-500">Ownership, funding, and legal/growth history for {companyRow.name}.</p>
+          </div>
+          <EditCapitalButton
+            companyId={id}
+            issuedShareCapital={companyRow.issued_share_capital}
+            paidUpShareCapital={companyRow.paid_up_share_capital}
+          />
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Ownership</h3>
+          <p className="text-xs text-slate-500 mb-3">
+            Issued: {companyRow.issued_share_capital != null ? companyRow.issued_share_capital.toLocaleString() : 'not set'} ·
+            {' '}Paid-up: {companyRow.paid_up_share_capital != null ? companyRow.paid_up_share_capital.toLocaleString() : 'not set'}
+          </p>
+          {activeShareholders.length === 0 ? (
+            <p className="text-sm text-slate-500">No shareholders on record yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {activeShareholders.map((r) => (
+                <li key={r.id} className="text-sm text-slate-700 flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                  <span>{r.people?.name ?? '—'}</span>
+                  <span className="text-slate-500">
+                    {r.share_count != null ? `${r.share_count.toLocaleString()} ${r.share_class ?? 'shares'}` : 'No share count on record'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-slate-700">Funding history</h3>
+            <AddFundingRoundButton companyId={id} />
+          </div>
+          {fundingRoundList.length === 0 ? (
+            <p className="text-sm text-slate-500">No funding rounds on record yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {fundingRoundList.map((f) => (
+                <li key={f.id} className="text-sm text-slate-700 flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                  <span>{f.round_type}{f.investor ? ` — ${f.investor}` : ''}</span>
+                  <span className="text-slate-500">{f.currency} {f.amount.toLocaleString()} · {f.closed_date}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-slate-700">Legal &amp; growth milestones</h3>
+            <AddMilestoneButton companyId={id} />
+          </div>
+          {milestoneList.length === 0 ? (
+            <p className="text-sm text-slate-500">No milestones on record yet.</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {milestoneList.map((m) => (
+                <li key={m.id} className="text-sm text-slate-700 flex items-center justify-between py-1 border-b border-slate-100 last:border-0">
+                  <span>{m.title}</span>
+                  <span className="text-slate-500">{m.category} · {m.event_date}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <AiSuggestions companyId={id} />
 
       {health.reasons.length > 0 && (
         <div className="card p-6">
@@ -139,7 +233,20 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   {r.people?.email && <span className="text-slate-400 ml-2">{r.people.email}</span>}
                 </div>
                 <div className="flex items-center gap-3">
+                  {r.role === 'shareholder' && (
+                    <span className="text-xs text-slate-500">
+                      {r.share_count != null ? `${r.share_count.toLocaleString()} ${r.share_class ?? 'shares'}` : 'No share count on record'}
+                    </span>
+                  )}
                   <span className="badge badge-info">{roleLabel[r.role]}</span>
+                  {r.role === 'shareholder' && (
+                    <EditShareholdingButton
+                      roleAssignmentId={r.id}
+                      personName={r.people?.name ?? 'this shareholder'}
+                      shareCount={r.share_count}
+                      shareClass={r.share_class}
+                    />
+                  )}
                   <RemoveRoleButton roleAssignmentId={r.id} />
                 </div>
               </li>

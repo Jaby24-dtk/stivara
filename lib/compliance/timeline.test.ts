@@ -68,4 +68,52 @@ describe('buildTimeline', () => {
     })
     expect(events.map((e) => e.date)).toEqual(['2024-01-15', '2024-06-01', '2025-01-01'])
   })
+
+  it('adds a funding round event, naming the investor when known', () => {
+    const events = buildTimeline({
+      companyName: 'STIV Pte Ltd',
+      incorporationDate: null,
+      roleAssignments: [],
+      documents: [],
+      fundingRounds: [
+        { roundType: 'Seed', amount: 500000, currency: 'SGD', investor: 'Acme Capital', closedDate: '2025-02-01' },
+        { roundType: 'Grant', amount: 50000, currency: 'SGD', investor: null, closedDate: '2025-01-01' },
+      ],
+    })
+    expect(events).toEqual([
+      { date: '2025-01-01', label: 'Grant — SGD 50,000 raised' },
+      { date: '2025-02-01', label: 'Seed — SGD 500,000 raised from Acme Capital' },
+    ])
+  })
+
+  it('adds a milestone event, labeled by category', () => {
+    const events = buildTimeline({
+      companyName: 'STIV Pte Ltd',
+      incorporationDate: null,
+      roleAssignments: [],
+      documents: [],
+      milestones: [
+        { category: 'legal', title: 'Trademark filed', eventDate: '2025-04-01' },
+        { category: 'growth', title: 'Vietnam subsidiary incorporated', eventDate: '2025-05-01' },
+        { category: 'other', title: 'Office relocated', eventDate: '2025-06-01' },
+      ],
+    })
+    expect(events).toEqual([
+      { date: '2025-04-01', label: 'Legal: Trademark filed' },
+      { date: '2025-05-01', label: 'Growth: Vietnam subsidiary incorporated' },
+      { date: '2025-06-01', label: 'Milestone: Office relocated' },
+    ])
+  })
+
+  it('merges funding rounds and milestones into the same chronological timeline', () => {
+    const events = buildTimeline({
+      companyName: 'STIV Pte Ltd',
+      incorporationDate: '2024-01-15',
+      roleAssignments: [{ personName: 'Erene', role: 'director', startDate: '2025-01-01', endDate: null }],
+      documents: [],
+      fundingRounds: [{ roundType: 'Seed', amount: 500000, currency: 'SGD', investor: null, closedDate: '2024-12-01' }],
+      milestones: [{ category: 'legal', title: 'Trademark filed', eventDate: '2025-02-01' }],
+    })
+    expect(events.map((e) => e.date)).toEqual(['2024-01-15', '2024-12-01', '2025-01-01', '2025-02-01'])
+  })
 })

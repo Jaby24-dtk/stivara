@@ -23,6 +23,8 @@ export type Company = {
   incorporation_date: string | null
   fye: string
   status: 'green' | 'amber' | 'red'
+  issued_share_capital: number | null
+  paid_up_share_capital: number | null
   created_at: string
   updated_at: string
 }
@@ -71,4 +73,27 @@ export type RoleAssignment = {
   role: 'director' | 'shareholder' | 'officer' | 'beneficial_owner'
   start_date: string
   end_date: string | null
+  share_count: number | null
+  share_class: string | null
+}
+
+export type FundingRound = {
+  id: string
+  company_id: string
+  round_type: string
+  amount: number
+  currency: string
+  investor: string | null
+  closed_date: string
+  created_at: string
+}
+
+export type Milestone = {
+  id: string
+  company_id: string
+  category: 'legal' | 'growth' | 'other'
+  title: string
+  description: string | null
+  event_date: string
+  created_at: string
 }
