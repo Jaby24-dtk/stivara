@@ -6,7 +6,7 @@ import { LayoutDashboard, Building2, CalendarClock, ListChecks, Sparkles, Settin
 import { createClient } from '@/lib/supabase/client'
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Mission Control', icon: LayoutDashboard },
   { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/compliance', label: 'Compliance', icon: CalendarClock },
   { href: '/tasks', label: 'Tasks', icon: ListChecks },

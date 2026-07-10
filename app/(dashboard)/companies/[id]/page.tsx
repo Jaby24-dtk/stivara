@@ -8,7 +8,11 @@ import { AddPersonButton } from '@/components/people/AddPersonButton'
 import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
 import { DirectorAppointmentWizard } from '@/components/people/DirectorAppointmentWizard'
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
-import { computeCompanyHealth, type HealthStatus } from '@/lib/compliance/health'
+import { CorporateDoctorScan } from '@/components/companies/CorporateDoctorScan'
+import { CompanyTimeline } from '@/components/companies/CompanyTimeline'
+import { computeCompanyHealth, computeMissionControl, type HealthStatus } from '@/lib/compliance/health'
+import { buildRecommendations } from '@/lib/compliance/recommendations'
+import { buildTimeline } from '@/lib/compliance/timeline'
 
 const roleLabel: Record<RoleAssignment['role'], string> = {
   director: 'Director',
@@ -40,7 +44,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     supabase.from('compliance_events').select('*').eq('company_id', id).order('due_date'),
     supabase.from('tasks').select('*').eq('company_id', id).order('due_date', { ascending: true, nullsFirst: false }),
     supabase.from('documents').select('*').eq('company_id', id).order('created_at', { ascending: false }),
-    supabase.from('role_assignments').select('*, people(name, email)').eq('company_id', id).is('end_date', null).order('start_date'),
+    supabase.from('role_assignments').select('*, people(name, email)').eq('company_id', id).order('start_date'),
   ])
 
   const companyRow = company as Company
@@ -48,12 +52,25 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   const taskList = (tasks ?? []) as Task[]
   const documentList = (documents ?? []) as Document[]
   type RoleAssignmentRow = RoleAssignment & { people: Pick<Person, 'name' | 'email'> | null }
+  // Includes past (resigned/removed) assignments too — needed for the
+  // timeline's history. The People card below filters to active-only.
   const roleAssignmentList = (roleAssignments ?? []) as unknown as RoleAssignmentRow[]
+  const activeRoleAssignmentList = roleAssignmentList.filter((r) => r.end_date === null)
 
-  const health = computeCompanyHealth({
-    events: eventList,
-    tasks: taskList,
-    directorCount: roleAssignmentList.filter((r) => r.role === 'director').length,
+  const directorCount = activeRoleAssignmentList.filter((r) => r.role === 'director').length
+  const health = computeCompanyHealth({ events: eventList, tasks: taskList, directorCount })
+  const missionControl = computeMissionControl({ events: eventList, tasks: taskList, directorCount })
+  const recommendations = buildRecommendations({ events: eventList, tasks: taskList, directorCount })
+  const timeline = buildTimeline({
+    companyName: companyRow.name,
+    incorporationDate: companyRow.incorporation_date,
+    roleAssignments: roleAssignmentList.map((r) => ({
+      personName: r.people?.name ?? 'Unknown person',
+      role: r.role,
+      startDate: r.start_date,
+      endDate: r.end_date,
+    })),
+    documents: documentList.map((d) => ({ name: d.name, createdAt: d.created_at })),
   })
 
   return (
@@ -66,6 +83,18 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           </p>
         </div>
         <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-lg font-bold text-slate-900 mb-1">Corporate Doctor</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          Scans the director register, statutory filings, and tasks on record for {companyRow.name}.
+        </p>
+        <CorporateDoctorScan
+          companyHealth={missionControl.trustScore}
+          riskLevel={missionControl.riskLevel}
+          recommendations={recommendations}
+        />
       </div>
 
       {health.reasons.length > 0 && (
@@ -92,11 +121,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             <AddPersonButton companyId={id} />
           </div>
         </div>
-        {roleAssignmentList.length === 0 ? (
+        {activeRoleAssignmentList.length === 0 ? (
           <p className="text-sm text-slate-500">No directors, shareholders, or officers on record yet.</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {roleAssignmentList.map((r) => (
+            {activeRoleAssignmentList.map((r) => (
               <li key={r.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
                 <div>
                   <span className="text-slate-900 font-medium">{r.people?.name ?? '—'}</span>
@@ -173,6 +202,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-lg font-bold text-slate-900 mb-4">Timeline</h2>
+        <CompanyTimeline events={timeline} />
       </div>
     </div>
   )

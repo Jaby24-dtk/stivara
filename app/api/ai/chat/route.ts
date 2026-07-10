@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { isGeminiConfigured, isGeminiRateLimitError, GEMINI_RATE_LIMIT_MESSAGE } from '@/lib/ai/gemini'
 import { isEmbeddingsConfigured } from '@/lib/ai/embeddings'
 import { search } from '@/lib/ai/documentSearch'
+import { buildCompanyContext } from '@/lib/ai/companyContext'
 
 export async function POST(request: Request) {
   const user = await getCurrentUser()
@@ -33,7 +34,8 @@ export async function POST(request: Request) {
   if (!company) return NextResponse.json({ error: 'Company not found' }, { status: 404 })
 
   try {
-    const result = await search(companyId, query)
+    const companyContext = await buildCompanyContext(companyId)
+    const result = await search(companyId, query, companyContext)
     return NextResponse.json(result)
   } catch (err) {
     console.error('AI Assistant search failed:', err)

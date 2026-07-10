@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import type { Company } from '@/lib/types'
-import { computeCompanyHealth, type HealthStatus } from '@/lib/compliance/health'
+import { computeCompanyHealth, computeMissionControl, type HealthStatus, type RiskLevel } from '@/lib/compliance/health'
+import { buildDailyBriefing } from '@/lib/compliance/briefing'
 
 const statusBadge: Record<HealthStatus, string> = {
   green: 'badge-success',
@@ -10,7 +11,20 @@ const statusBadge: Record<HealthStatus, string> = {
   red: 'badge-danger',
 }
 
+const riskBadge: Record<RiskLevel, string> = {
+  LOW: 'badge-success',
+  MEDIUM: 'badge-warning',
+  HIGH: 'badge-danger',
+}
+
 type RiskItem = { companyId: string; companyName: string; severity: 'red' | 'amber'; message: string }
+
+function greeting(now: Date): string {
+  const hour = now.getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -40,41 +54,82 @@ export default async function DashboardPage() {
     ])
   )
 
-  const counts = { green: 0, amber: 0, red: 0 }
+  const missionControlByCompany = new Map(
+    companyList.map((c) => [
+      c.id,
+      computeMissionControl({
+        events: (events ?? []).filter((e) => e.company_id === c.id),
+        tasks: (tasks ?? []).filter((t) => t.company_id === c.id),
+        directorCount: (roles ?? []).filter((r) => r.company_id === c.id).length,
+      }),
+    ])
+  )
+
+  const riskRank: Record<RiskLevel, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 }
+  const portfolioScore = companyList.length === 0
+    ? { trustScore: 100, governanceScore: 100, riskLevel: 'LOW' as RiskLevel }
+    : companyList.reduce(
+        (acc, c) => {
+          const s = missionControlByCompany.get(c.id)!
+          return {
+            trustScore: acc.trustScore + s.trustScore / companyList.length,
+            governanceScore: acc.governanceScore + s.governanceScore / companyList.length,
+            riskLevel: riskRank[s.riskLevel] > riskRank[acc.riskLevel] ? s.riskLevel : acc.riskLevel,
+          }
+        },
+        { trustScore: 0, governanceScore: 0, riskLevel: 'LOW' as RiskLevel }
+      )
+  portfolioScore.trustScore = Math.round(portfolioScore.trustScore)
+  portfolioScore.governanceScore = Math.round(portfolioScore.governanceScore)
+
   const riskItems: RiskItem[] = []
   for (const c of companyList) {
     const health = healthByCompany.get(c.id)!
-    counts[health.status]++
     for (const reason of health.reasons) {
       riskItems.push({ companyId: c.id, companyName: c.name, severity: reason.severity, message: reason.message })
     }
   }
   riskItems.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'red' ? -1 : 1))
 
+  const briefing = buildDailyBriefing({
+    items: riskItems,
+    trustScore: portfolioScore.trustScore,
+    riskLevel: portfolioScore.riskLevel,
+  })
+
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Portfolio</h1>
+        <p className="text-xs font-semibold text-teal-700 uppercase tracking-wide mb-1">{greeting(new Date())}</p>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{user.name}</h1>
         <p className="text-sm text-slate-500">{companyList.length} companies under management</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="card p-5">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Healthy</p>
-          <p className="text-3xl font-bold text-slate-900">{counts.green}</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Needs attention</p>
-          <p className="text-3xl font-bold text-slate-900">{counts.amber}</p>
-        </div>
-        <div className="card p-5">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">At risk</p>
-          <p className="text-3xl font-bold text-slate-900">{counts.red}</p>
+      <div className="card p-6">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Daily briefing</p>
+        <p className="text-sm text-slate-700 leading-relaxed">{briefing}</p>
+      </div>
+
+      <div className="card p-6">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-4">Corporate Trust Score</p>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <p className="text-4xl font-bold text-slate-900">{portfolioScore.trustScore}</p>
+            <p className="text-xs text-slate-500 mt-1">Trust score</p>
+          </div>
+          <div>
+            <p className="text-4xl font-bold text-slate-900">{portfolioScore.governanceScore}</p>
+            <p className="text-xs text-slate-500 mt-1">Governance</p>
+          </div>
+          <div>
+            <span className={`badge ${riskBadge[portfolioScore.riskLevel]}`}>{portfolioScore.riskLevel}</span>
+            <p className="text-xs text-slate-500 mt-1">Risk</p>
+          </div>
         </div>
       </div>
 
       <div className="card p-6">
-        <h2 className="text-lg font-bold text-slate-900 mb-1">Risk items</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-1">Today&rsquo;s Priority</h2>
         <p className="text-sm text-slate-500 mb-4">Everything that needs action, across your whole portfolio, most urgent first.</p>
         {riskItems.length === 0 ? (
           <p className="text-sm text-slate-500">Nothing needs attention right now.</p>

@@ -46,8 +46,13 @@ export type SearchResult = {
   citations: { documentId: string; chunkIndex: number; excerpt: string }[]
 }
 
-/** RAG query: embed the question, find similar chunks scoped to a company, ask Claude to answer with citations. */
-export async function search(companyId: string, query: string): Promise<SearchResult> {
+/**
+ * RAG query: embed the question, find similar chunks scoped to a company,
+ * ask Gemini to answer using both those excerpts and the company's real
+ * structured facts (companyContext — directors, filings, cross-company
+ * roles), and cite document sources where used.
+ */
+export async function search(companyId: string, query: string, companyContext: string): Promise<SearchResult> {
   const [queryEmbedding] = await embed([query])
   const admin = createAdminClient()
 
@@ -60,21 +65,18 @@ export async function search(companyId: string, query: string): Promise<SearchRe
 
   const chunks = (matches ?? []) as { document_id: string; chunk_index: number; content: string }[]
 
-  if (chunks.length === 0) {
-    return { answer: 'No indexed documents found for this company yet.', citations: [] }
-  }
-
-  const context = chunks
-    .map((c, i) => `[${i + 1}] (doc ${c.document_id}, chunk ${c.chunk_index})\n${c.content}`)
-    .join('\n\n')
+  const docContext = chunks.length > 0
+    ? chunks.map((c, i) => `[${i + 1}] (doc ${c.document_id}, chunk ${c.chunk_index})\n${c.content}`).join('\n\n')
+    : '(no indexed documents matched this question)'
 
   const answer = await chat({
     system:
-      'You are the Stivara AI Company Secretary. Answer only from the provided document excerpts. ' +
-      'Cite sources inline using [1], [2], etc. matching the excerpt numbers. If the excerpts do not ' +
-      'contain the answer, say so clearly instead of guessing.',
+      'You are the Stivara AI Company Secretary. Answer using the company facts and document excerpts below. ' +
+      'The company facts are structured data straight from Stivara\'s own records — treat them as ground truth. ' +
+      'Cite document excerpts inline using [1], [2], etc. matching their numbers. If neither the facts nor the ' +
+      'excerpts answer the question, say so clearly instead of guessing.',
     messages: [
-      { role: 'user', content: `Question: ${query}\n\nDocument excerpts:\n${context}` },
+      { role: 'user', content: `Question: ${query}\n\nCompany facts:\n${companyContext}\n\nDocument excerpts:\n${docContext}` },
     ],
   })
 
