@@ -8,9 +8,12 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name, jurisdiction, entityType, incorporationDate, fye } = body
+  const { name, jurisdiction, jurisdictionOther, entityType, incorporationDate, fye } = body
   if (!name || !jurisdiction || !fye) {
     return NextResponse.json({ error: 'name, jurisdiction, and fye are required' }, { status: 400 })
+  }
+  if (jurisdiction === 'OTHER' && !jurisdictionOther) {
+    return NextResponse.json({ error: 'jurisdictionOther is required when jurisdiction is OTHER' }, { status: 400 })
   }
 
   const supabase = await createClient()
@@ -21,6 +24,7 @@ export async function POST(request: Request) {
       organization_id: user.organization_id,
       name,
       jurisdiction,
+      jurisdiction_other: jurisdiction === 'OTHER' ? jurisdictionOther : null,
       entity_type: entityType ?? null,
       incorporation_date: incorporationDate ?? null,
       fye,

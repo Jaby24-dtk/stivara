@@ -18,6 +18,7 @@ import { AiSuggestions } from '@/components/companies/AiSuggestions'
 import { EditCompanyButton } from '@/components/companies/EditCompanyButton'
 import { DeleteCompanyButton } from '@/components/companies/DeleteCompanyButton'
 import { computeCompanyHealth, computeMissionControl, deriveEventStatus, type EventStatus, type HealthStatus } from '@/lib/compliance/health'
+import { getJurisdictionLabel } from '@/lib/reference/jurisdictions'
 import { buildRecommendations } from '@/lib/compliance/recommendations'
 import { buildTimeline } from '@/lib/compliance/timeline'
 
@@ -106,7 +107,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
           <p className="text-sm text-slate-500">
-            {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
+            {getJurisdictionLabel(companyRow.jurisdiction, companyRow.jurisdiction_other)} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -18,7 +18,8 @@ export type Company = {
   id: string
   organization_id: string
   name: string
-  jurisdiction: 'SG' | 'MY' | 'PH' | 'KR'
+  jurisdiction: string
+  jurisdiction_other: string | null
   entity_type: string | null
   incorporation_date: string | null
   fye: string

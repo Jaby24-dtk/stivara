@@ -27,7 +27,11 @@ create table if not exists public.companies (
   id uuid primary key default uuid_generate_v4(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
   name text not null,
-  jurisdiction text not null check (jurisdiction in ('SG', 'MY', 'PH', 'KR')),
+  jurisdiction text not null check (jurisdiction in (
+    'SG', 'HK', 'MY', 'PH', 'ID', 'VN', 'TH', 'KH', 'AE', 'SA', 'IN', 'CN', 'JP', 'KR',
+    'AU', 'NZ', 'GB', 'IE', 'US', 'CA', 'VG', 'KY', 'SC', 'MU', 'BZ', 'PA', 'OTHER'
+  )),
+  jurisdiction_other text,
   entity_type text,
   incorporation_date date,
   fye date not null,

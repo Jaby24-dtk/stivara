@@ -8,14 +8,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const { name, jurisdiction, entityType, incorporationDate, fye } = await request.json()
+  const { name, jurisdiction, jurisdictionOther, entityType, incorporationDate, fye } = await request.json()
 
   const updates: Record<string, string | null> = {}
   if (name !== undefined) {
     if (!name.trim()) return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 })
     updates.name = name
   }
-  if (jurisdiction !== undefined) updates.jurisdiction = jurisdiction
+  if (jurisdiction !== undefined) {
+    if (jurisdiction === 'OTHER' && !jurisdictionOther) {
+      return NextResponse.json({ error: 'jurisdictionOther is required when jurisdiction is OTHER' }, { status: 400 })
+    }
+    updates.jurisdiction = jurisdiction
+    updates.jurisdiction_other = jurisdiction === 'OTHER' ? jurisdictionOther : null
+  }
   if (entityType !== undefined) updates.entity_type = entityType || null
   if (incorporationDate !== undefined) updates.incorporation_date = incorporationDate || null
   if (fye !== undefined) updates.fye = fye

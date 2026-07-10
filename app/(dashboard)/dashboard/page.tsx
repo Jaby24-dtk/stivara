@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth'
 import type { Company } from '@/lib/types'
 import { computeCompanyHealth, computeMissionControl, type HealthStatus, type RiskLevel } from '@/lib/compliance/health'
 import { buildDailyBriefing } from '@/lib/compliance/briefing'
+import { HealthLegend } from '@/components/companies/HealthLegend'
 
 const statusBadge: Record<HealthStatus, string> = {
   green: 'badge-success',
@@ -129,6 +130,9 @@ export default async function DashboardPage() {
             <span className={`badge ${riskBadge[portfolioScore.riskLevel]} text-sm`}>{portfolioScore.riskLevel}</span>
             <p className="text-sm text-slate-500 mt-2">Risk</p>
           </div>
+        </div>
+        <div className="mt-5 pt-5 border-t border-slate-100">
+          <HealthLegend />
         </div>
       </div>
 

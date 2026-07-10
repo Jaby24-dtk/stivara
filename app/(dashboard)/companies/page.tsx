@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Company } from '@/lib/types'
 import { AddCompanyButton } from '@/components/companies/AddCompanyButton'
+import { HealthLegend } from '@/components/companies/HealthLegend'
 import { computeCompanyHealth, type HealthStatus } from '@/lib/compliance/health'
+import { getJurisdictionLabel } from '@/lib/reference/jurisdictions'
 
 const statusBadge: Record<HealthStatus, string> = {
   green: 'badge-success',
@@ -43,6 +45,8 @@ export default async function CompaniesPage() {
         <AddCompanyButton />
       </div>
 
+      <HealthLegend />
+
       <div className="card p-6">
         {companyList.length === 0 ? (
           <p className="text-sm text-slate-500">No companies yet.</p>
@@ -67,7 +71,7 @@ export default async function CompaniesPage() {
                         {c.name}
                       </Link>
                     </td>
-                    <td className="py-2 text-slate-600">{c.jurisdiction}</td>
+                    <td className="py-2 text-slate-600">{getJurisdictionLabel(c.jurisdiction, c.jurisdiction_other)}</td>
                     <td className="py-2 text-slate-600">{c.entity_type ?? '—'}</td>
                     <td className="py-2 text-slate-600">{c.fye}</td>
                     <td className="py-2">
