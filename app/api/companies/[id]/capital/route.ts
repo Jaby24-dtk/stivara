@@ -11,6 +11,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (issuedShareCapital == null && paidUpShareCapital == null) {
     return NextResponse.json({ error: 'issuedShareCapital or paidUpShareCapital is required' }, { status: 400 })
   }
+  // No DB CHECK constraint on these columns (unlike funding_rounds.amount),
+  // so this is the only thing stopping a negative figure from persisting.
+  if ((issuedShareCapital != null && issuedShareCapital < 0) || (paidUpShareCapital != null && paidUpShareCapital < 0)) {
+    return NextResponse.json({ error: 'Share capital cannot be negative' }, { status: 400 })
+  }
 
   const supabase = await createClient()
   const updates: Record<string, number> = {}

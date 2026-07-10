@@ -9,12 +9,15 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { companyId, name, email, role, startDate } = body
+  const { companyId, name, email, role, startDate, shareCount, shareClass } = body
   if (!companyId || !name || !role || !VALID_ROLES.includes(role)) {
     return NextResponse.json(
       { error: 'companyId, name, and a valid role (director, shareholder, officer, beneficial_owner) are required' },
       { status: 400 }
     )
+  }
+  if (shareCount != null && shareCount < 0) {
+    return NextResponse.json({ error: 'shareCount cannot be negative' }, { status: 400 })
   }
 
   const supabase = await createClient()
@@ -41,6 +44,8 @@ export async function POST(request: Request) {
       company_id: companyId,
       role,
       start_date: startDate || new Date().toISOString().slice(0, 10),
+      share_count: shareCount ?? null,
+      share_class: shareCount != null ? shareClass ?? null : null,
     })
     .select()
     .single()

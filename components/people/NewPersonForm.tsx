@@ -8,6 +8,8 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('director')
+  const [shareCount, setShareCount] = useState('')
+  const [shareClass, setShareClass] = useState('ordinary')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -18,7 +20,14 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
     const res = await fetch('/api/people', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ companyId, name, email: email || null, role }),
+      body: JSON.stringify({
+        companyId,
+        name,
+        email: email || null,
+        role,
+        shareCount: role === 'shareholder' && shareCount !== '' ? Number(shareCount) : undefined,
+        shareClass: role === 'shareholder' ? shareClass : undefined,
+      }),
     })
     setLoading(false)
     if (!res.ok) {
@@ -40,6 +49,24 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
         <option value="officer">Officer</option>
         <option value="beneficial_owner">Beneficial owner</option>
       </select>
+      {role === 'shareholder' && (
+        <div className="flex gap-2">
+          <input
+            className="input-field"
+            type="number"
+            min="0"
+            placeholder="Share count (optional)"
+            value={shareCount}
+            onChange={(e) => setShareCount(e.target.value)}
+          />
+          <input
+            className="input-field w-32"
+            placeholder="Share class"
+            value={shareClass}
+            onChange={(e) => setShareClass(e.target.value)}
+          />
+        </div>
+      )}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button className="btn-primary justify-center" type="submit" disabled={loading}>
         {loading ? 'Adding…' : 'Add person'}

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { provisionComplianceEvents } from '@/lib/compliance/provisioning'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
@@ -24,6 +25,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const supabase = await createClient()
+
+  // Fetched before the update so a real jurisdiction/FYE change can be
+  // detected below — compliance_events are computed once at creation from
+  // these two fields and never kept in sync automatically otherwise.
+  const { data: before } = await supabase.from('companies').select('jurisdiction, fye').eq('id', id).single()
+
   // RLS scopes this update to companies in the caller's org.
   const { data: company, error } = await supabase
     .from('companies')
@@ -34,7 +41,39 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (!company) return NextResponse.json({ error: 'Company not found' }, { status: 404 })
-  return NextResponse.json({ company })
+
+  const jurisdictionOrFyeChanged = before && (company.jurisdiction !== before.jurisdiction || company.fye !== before.fye)
+  let warning: string | undefined
+  if (jurisdictionOrFyeChanged) {
+    warning = await regenerateComplianceEvents(supabase, id, company.jurisdiction, company.fye)
+  }
+
+  return NextResponse.json({ company, warning })
+}
+
+// Deadlines already marked completed are left alone (real history, not
+// stale data) — only pending events/tasks get cleared and regenerated
+// against the new jurisdiction/FYE.
+async function regenerateComplianceEvents(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  jurisdiction: string,
+  fye: string
+): Promise<string | undefined> {
+  const { data: staleEvents } = await supabase
+    .from('compliance_events')
+    .select('id')
+    .eq('company_id', companyId)
+    .neq('status', 'completed')
+  const staleEventIds = (staleEvents ?? []).map((e) => e.id)
+
+  if (staleEventIds.length > 0) {
+    await supabase.from('tasks').delete().in('source_compliance_event_id', staleEventIds).neq('status', 'done')
+    await supabase.from('compliance_events').delete().in('id', staleEventIds)
+  }
+
+  const { warning } = await provisionComplianceEvents(supabase, companyId, jurisdiction, fye)
+  return warning
 }
 
 // Cascades to role_assignments, documents, doc_chunks, compliance_events,

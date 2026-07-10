@@ -132,6 +132,17 @@ alter table public.role_assignments add column if not exists share_class text;
 alter table public.companies add column if not exists issued_share_capital numeric;
 alter table public.companies add column if not exists paid_up_share_capital numeric;
 
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'companies_issued_capital_non_negative') then
+    alter table public.companies add constraint companies_issued_capital_non_negative
+      check (issued_share_capital is null or issued_share_capital >= 0);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'companies_paid_up_capital_non_negative') then
+    alter table public.companies add constraint companies_paid_up_capital_non_negative
+      check (paid_up_share_capital is null or paid_up_share_capital >= 0);
+  end if;
+end $$;
+
 -- Funding rounds (Corporate DNA — funding history)
 create table if not exists public.funding_rounds (
   id uuid primary key default uuid_generate_v4(),

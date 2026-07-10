@@ -15,8 +15,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params
   const { endDate, shareCount, shareClass } = await request.json()
 
+  const hasShareFields = shareCount !== undefined || shareClass !== undefined
+  if (hasShareFields && endDate !== undefined) {
+    return NextResponse.json({ error: 'Cannot end a role and update its shareholding in the same request' }, { status: 400 })
+  }
+
   const updates: Record<string, string | number | null> = {}
-  if (shareCount !== undefined || shareClass !== undefined) {
+  if (hasShareFields) {
     if (shareCount !== undefined) updates.share_count = shareCount
     if (shareClass !== undefined) updates.share_class = shareClass
   } else {
