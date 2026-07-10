@@ -240,7 +240,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
               return (
               <li key={r.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
                 <div>
-                  <span className="text-slate-900 font-medium">{holderName}</span>
+                  {r.person_id ? (
+                    <Link href={`/people/${r.person_id}`} className="text-slate-900 font-medium hover:text-teal-700">{holderName}</Link>
+                  ) : (
+                    <span className="text-slate-900 font-medium">{holderName}</span>
+                  )}
                   {r.people?.email && <span className="text-slate-400 ml-2">{r.people.email}</span>}
                   {r.legal_entity_id && <span className="text-slate-400 ml-2">(legal entity)</span>}
                   {r.is_nominee && <span className="badge badge-gray ml-2">nominee</span>}

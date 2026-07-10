@@ -91,6 +91,8 @@ export type Document = {
   content_type: string | null
   uploaded_by: string | null
   created_at: string
+  person_id: string | null
+  legal_entity_id: string | null
 }
 
 export type Person = {
@@ -99,6 +101,21 @@ export type Person = {
   name: string
   email: string | null
   created_at: string
+
+  // KYC fields (STIVARA_V2 Phase 1, Milestone 4). The *_encrypted fields are
+  // AES-256-GCM ciphertext (lib/security/pii.ts) — never decrypted
+  // client-side by default; only via POST /api/people/[id]/reveal-sensitive.
+  id_type: 'nric' | 'passport' | 'fin' | 'other' | null
+  id_number_encrypted: string | null
+  nationality: string | null
+  residential_address_encrypted: string | null
+  service_address: string | null
+  phone: string | null
+  date_of_birth: string | null
+  kyc_status: 'not_started' | 'pending' | 'verified' | 'rejected' | null
+  sanctions_screening_status: 'not_screened' | 'clear' | 'flagged' | 'under_review' | null
+  pep_status: 'not_pep' | 'pep' | 'pep_associate' | 'unknown' | null
+  verification_date: string | null
 }
 
 // Corporate shareholders, holding companies, auditors, banks, and service

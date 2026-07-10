@@ -438,3 +438,44 @@ do $$ begin
       check (audit_exemption_status is null or audit_exemption_status in ('exempt', 'review_required', 'not_exempt'));
   end if;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- STIVARA_V2 Phase 1, Milestone 4 — Person KYC fields + sensitive-field
+-- encryption. id_number_encrypted / residential_address_encrypted are
+-- application-layer AES-256-GCM ciphertext (see lib/security/pii.ts), stored
+-- as plain text columns — no pgcrypto/Vault needed. date_of_birth is left
+-- unencrypted (lower misuse risk, awkward to encrypt a date column).
+-- ---------------------------------------------------------------------------
+
+alter table public.people add column if not exists id_type text;
+alter table public.people add column if not exists id_number_encrypted text;
+alter table public.people add column if not exists nationality text;
+alter table public.people add column if not exists residential_address_encrypted text;
+alter table public.people add column if not exists service_address text;
+alter table public.people add column if not exists phone text;
+alter table public.people add column if not exists date_of_birth date;
+alter table public.people add column if not exists kyc_status text;
+alter table public.people add column if not exists sanctions_screening_status text;
+alter table public.people add column if not exists pep_status text;
+alter table public.people add column if not exists verification_date date;
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'people_id_type_valid') then
+    alter table public.people add constraint people_id_type_valid check (id_type is null or id_type in ('nric', 'passport', 'fin', 'other'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'people_kyc_status_valid') then
+    alter table public.people add constraint people_kyc_status_valid check (kyc_status is null or kyc_status in ('not_started', 'pending', 'verified', 'rejected'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'people_sanctions_status_valid') then
+    alter table public.people add constraint people_sanctions_status_valid check (sanctions_screening_status is null or sanctions_screening_status in ('not_screened', 'clear', 'flagged', 'under_review'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'people_pep_status_valid') then
+    alter table public.people add constraint people_pep_status_valid check (pep_status is null or pep_status in ('not_pep', 'pep', 'pep_associate', 'unknown'));
+  end if;
+end $$;
+
+-- "Supporting documents" reuses the existing documents table with two new
+-- nullable tag columns rather than a redesign — person/entity-linked
+-- documents still require an owning company_id (unchanged).
+alter table public.documents add column if not exists person_id uuid references public.people(id) on delete cascade;
+alter table public.documents add column if not exists legal_entity_id uuid references public.legal_entities(id) on delete cascade;
