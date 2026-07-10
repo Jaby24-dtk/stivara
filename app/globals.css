@@ -7,6 +7,8 @@
   --teal: #0F766E;
   --teal-light: #14B8A6;
   --teal-dark: #0B5C55;
+  --gold: #C9A227;
+  --gold-light: #EBD79C;
   --bg: #F7F8FA;
   --success: #22C55E;
   --warning: #F59E0B;
@@ -149,3 +151,50 @@ h1, h2, h3 {
 .table-row-hover:hover { background: #F8FAFC; }
 
 select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 20px; padding-right: 36px; }
+
+.font-display {
+  font-family: var(--font-display), 'Fraunces', serif;
+}
+
+.gradient-text {
+  background-image: linear-gradient(100deg, var(--navy) 0%, var(--teal) 45%, var(--gold) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-panel {
+  background-image: radial-gradient(120% 140% at 0% 0%, var(--navy-light) 0%, var(--navy) 55%, #050810 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(115deg, transparent 40%, rgba(201,162,39,0.14) 55%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-gold {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #E7EAF0;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 1px 8px rgba(15,23,42,0.03);
+  position: relative;
+}
+
+.card-gold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(201,162,39,0.35), transparent 30%, transparent 70%, rgba(15,118,110,0.35));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
