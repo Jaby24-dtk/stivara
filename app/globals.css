@@ -40,10 +40,10 @@ h1, h2, h3 {
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 11px 12px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: #94A3B8;
   transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Building2, CalendarClock, ListChecks, Sparkles, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, CalendarClock, ListChecks, FileText, Sparkles, Settings, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/compliance', label: 'Compliance', icon: CalendarClock },
   { href: '/tasks', label: 'Tasks', icon: ListChecks },
+  { href: '/templates', label: 'Templates', icon: FileText },
   { href: '/ai-assistant', label: 'AI Assistant', icon: Sparkles },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
@@ -49,7 +50,7 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
             href={href}
             className={`sidebar-link ${pathname.startsWith(href) ? 'active' : ''}`}
           >
-            <Icon size={16} />
+            <Icon size={18} />
             {label}
           </Link>
         ))}
