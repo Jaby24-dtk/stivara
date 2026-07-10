@@ -25,5 +25,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+
+  // Keep the linked compliance event's completion state in sync with the
+  // task that tracks it. Without this, deriveEventStatus() (lib/compliance/
+  // health.ts) has no way to know a filing was actually done, and would
+  // keep computing it as overdue from the due date forever.
+  if (task.source_compliance_event_id) {
+    await supabase
+      .from('compliance_events')
+      .update({ status: status === 'done' ? 'completed' : 'upcoming' })
+      .eq('id', task.source_compliance_event_id)
+  }
+
   return NextResponse.json({ task })
 }

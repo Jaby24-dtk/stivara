@@ -10,7 +10,7 @@ import { DirectorAppointmentWizard } from '@/components/people/DirectorAppointme
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
 import { CorporateDoctorScan } from '@/components/companies/CorporateDoctorScan'
 import { CompanyTimeline } from '@/components/companies/CompanyTimeline'
-import { computeCompanyHealth, computeMissionControl, type HealthStatus } from '@/lib/compliance/health'
+import { computeCompanyHealth, computeMissionControl, deriveEventStatus, type EventStatus, type HealthStatus } from '@/lib/compliance/health'
 import { buildRecommendations } from '@/lib/compliance/recommendations'
 import { buildTimeline } from '@/lib/compliance/timeline'
 
@@ -31,6 +31,13 @@ const healthLabel: Record<HealthStatus, string> = {
   green: 'Healthy',
   amber: 'Needs attention',
   red: 'At risk',
+}
+
+const eventStatusBadge: Record<EventStatus, string> = {
+  upcoming: 'badge-info',
+  due_soon: 'badge-warning',
+  overdue: 'badge-danger',
+  completed: 'badge-success',
 }
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -147,13 +154,16 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <p className="text-sm text-slate-500">No compliance events on record.</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {eventList.map((e) => (
-              <li key={e.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
-                <span className="text-slate-700">{e.type}</span>
-                <span className="text-slate-500">{e.due_date}</span>
-                <span className="badge badge-gray">{e.status}</span>
-              </li>
-            ))}
+            {eventList.map((e) => {
+              const status = deriveEventStatus(e)
+              return (
+                <li key={e.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
+                  <span className="text-slate-700">{e.type}</span>
+                  <span className="text-slate-500">{e.due_date}</span>
+                  <span className={`badge ${eventStatusBadge[status]}`}>{status.replace('_', ' ')}</span>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

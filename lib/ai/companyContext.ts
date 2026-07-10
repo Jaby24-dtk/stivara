@@ -6,6 +6,7 @@
 // aren't tracked yet, so they're simply not mentioned).
 
 import { createClient } from '@/lib/supabase/server'
+import { deriveEventStatus } from '@/lib/compliance/health'
 
 const roleLabel: Record<string, string> = {
   director: 'director',
@@ -62,7 +63,11 @@ export async function buildCompanyContext(companyId: string): Promise<string> {
 
   type EventRow = { type: string; due_date: string; status: string }
   for (const e of (events ?? []) as EventRow[]) {
-    lines.push(`${e.type} is due ${e.due_date} (status: ${e.status}).`)
+    // deriveEventStatus, not e.status directly — the column is written once
+    // at insert and never updated, so it goes stale (see health.ts). Feeding
+    // the raw column to the AI as "ground truth" would let it tell a user a
+    // filing is fine when it's actually overdue.
+    lines.push(`${e.type} is due ${e.due_date} (status: ${deriveEventStatus(e)}).`)
   }
 
   return lines.join('\n')

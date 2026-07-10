@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Company, ComplianceEvent } from '@/lib/types'
+import { deriveEventStatus, type EventStatus } from '@/lib/compliance/health'
 
-const statusBadge: Record<ComplianceEvent['status'], string> = {
+const statusBadge: Record<EventStatus, string> = {
   upcoming: 'badge-info',
   due_soon: 'badge-warning',
   overdue: 'badge-danger',
@@ -40,18 +41,21 @@ export default async function CompliancePage() {
               </tr>
             </thead>
             <tbody>
-              {eventList.map((e) => (
-                <tr key={e.id} className="table-row-hover border-b border-slate-100">
-                  <td className="py-2">
-                    <Link href={`/companies/${e.company_id}`} className="font-medium text-slate-900 hover:text-teal-700">
-                      {e.companies?.name ?? '—'}
-                    </Link>
-                  </td>
-                  <td className="py-2 text-slate-600">{e.type}</td>
-                  <td className="py-2 text-slate-600">{e.due_date}</td>
-                  <td className="py-2"><span className={`badge ${statusBadge[e.status]}`}>{e.status.replace('_', ' ')}</span></td>
-                </tr>
-              ))}
+              {eventList.map((e) => {
+                const status = deriveEventStatus(e)
+                return (
+                  <tr key={e.id} className="table-row-hover border-b border-slate-100">
+                    <td className="py-2">
+                      <Link href={`/companies/${e.company_id}`} className="font-medium text-slate-900 hover:text-teal-700">
+                        {e.companies?.name ?? '—'}
+                      </Link>
+                    </td>
+                    <td className="py-2 text-slate-600">{e.type}</td>
+                    <td className="py-2 text-slate-600">{e.due_date}</td>
+                    <td className="py-2"><span className={`badge ${statusBadge[status]}`}>{status.replace('_', ' ')}</span></td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}

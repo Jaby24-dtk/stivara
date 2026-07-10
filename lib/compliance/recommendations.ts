@@ -15,7 +15,6 @@ export function buildRecommendations(params: {
   today?: Date
 }): string[] {
   const today = params.today ?? new Date()
-  today.setHours(0, 0, 0, 0)
   const recs: string[] = []
 
   if (params.directorCount === 0) {

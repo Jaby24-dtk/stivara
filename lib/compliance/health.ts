@@ -21,10 +21,18 @@ export type MissionControlScore = {
 
 const AMBER_WINDOW_DAYS = 30
 
+// Pure UTC arithmetic, deliberately — a date-only string like '2026-07-11'
+// parses as UTC midnight, but truncating it to *local* midnight (as this
+// used to do via due.setHours(0,0,0,0)) silently shifts the date back a day
+// in any timezone behind UTC. Same class of bug addMonths() in
+// lib/compliance/singapore.ts already guards against, just missed here.
+// today's local Y/M/D is read (not its UTC one) since that's the calendar
+// date the caller means by "today", then re-anchored at UTC midnight so
+// both sides of the diff are computed the same way.
 export function daysUntil(dateStr: string, today: Date): number {
   const due = new Date(dateStr)
-  due.setHours(0, 0, 0, 0)
-  return Math.round((due.getTime() - today.getTime()) / 86_400_000)
+  const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  return Math.round((due.getTime() - todayUTC) / 86_400_000)
 }
 
 type HealthInputs = {
@@ -40,7 +48,6 @@ type HealthInputs = {
 // scoring only cares about the first and third.
 function buildReasons(params: HealthInputs) {
   const today = params.today ?? new Date()
-  today.setHours(0, 0, 0, 0)
 
   const eventReasons: HealthReason[] = []
   for (const e of params.events) {
@@ -66,6 +73,20 @@ function buildReasons(params: HealthInputs) {
 
 function bySeverity(a: HealthReason, b: HealthReason): number {
   return a.severity === b.severity ? 0 : a.severity === 'red' ? -1 : 1
+}
+
+export type EventStatus = 'upcoming' | 'due_soon' | 'overdue' | 'completed'
+
+// compliance_events.status is written once at insert time (see
+// app/api/companies/route.ts) and nothing ever updates it afterward — the
+// same staleness bug this file already fixed once for companies.status.
+// Derive the real status at read time instead of trusting the column.
+export function deriveEventStatus(event: { due_date: string; status: string }, today?: Date): EventStatus {
+  if (event.status === 'completed') return 'completed'
+  const diff = daysUntil(event.due_date, today ?? new Date())
+  if (diff < 0) return 'overdue'
+  if (diff <= AMBER_WINDOW_DAYS) return 'due_soon'
+  return 'upcoming'
 }
 
 export function computeCompanyHealth(params: HealthInputs): { status: HealthStatus; reasons: HealthReason[] } {
