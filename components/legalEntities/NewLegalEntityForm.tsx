@@ -3,12 +3,24 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CORPORATE_ROLE_LABELS, CORPORATE_ROLE_GROUPS } from '@/lib/reference/corporateRoles'
+import { JURISDICTIONS } from '@/lib/reference/jurisdictions'
 
-export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
+const CATEGORY_LABELS: Record<string, string> = {
+  company: 'Company',
+  bank: 'Bank',
+  auditor: 'Auditor',
+  service_provider: 'Service provider',
+  government_body: 'Government body',
+  other: 'Other',
+}
+
+export function NewLegalEntityForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
   const router = useRouter()
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState('director')
+  const [entityCategory, setEntityCategory] = useState('company')
+  const [jurisdiction, setJurisdiction] = useState('')
+  const [registrationNumber, setRegistrationNumber] = useState('')
+  const [role, setRole] = useState('shareholder')
   const [shareCount, setShareCount] = useState('')
   const [shareClass, setShareClass] = useState('ordinary')
   const [error, setError] = useState<string | null>(null)
@@ -18,13 +30,15 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const res = await fetch('/api/people', {
+    const res = await fetch('/api/legal-entities', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         companyId,
         name,
-        email: email || null,
+        entityCategory,
+        jurisdiction: jurisdiction || null,
+        registrationNumber: registrationNumber || null,
         role,
         shareCount: role === 'shareholder' && shareCount !== '' ? Number(shareCount) : undefined,
         shareClass: role === 'shareholder' ? shareClass : undefined,
@@ -33,7 +47,7 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
     setLoading(false)
     if (!res.ok) {
       const body = await res.json()
-      setError(body.error ?? 'Failed to add person')
+      setError(body.error ?? 'Failed to add legal entity')
       return
     }
     router.refresh()
@@ -42,8 +56,24 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <input className="input-field" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} required />
-      <input className="input-field" type="email" placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input className="input-field" placeholder="Entity name" value={name} onChange={(e) => setName(e.target.value)} required />
+      <select className="input-field" value={entityCategory} onChange={(e) => setEntityCategory(e.target.value)}>
+        {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>{label}</option>
+        ))}
+      </select>
+      <select className="input-field" value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)}>
+        <option value="">Jurisdiction (optional)</option>
+        {JURISDICTIONS.map((j) => (
+          <option key={j.code} value={j.name}>{j.name}</option>
+        ))}
+      </select>
+      <input
+        className="input-field"
+        placeholder="Registration number (optional)"
+        value={registrationNumber}
+        onChange={(e) => setRegistrationNumber(e.target.value)}
+      />
       <select className="input-field" value={role} onChange={(e) => setRole(e.target.value)}>
         {CORPORATE_ROLE_GROUPS.map((group) => (
           <optgroup key={group.label} label={group.label}>
@@ -73,7 +103,7 @@ export function NewPersonForm({ companyId, onDone }: { companyId: string; onDone
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button className="btn-primary justify-center" type="submit" disabled={loading}>
-        {loading ? 'Adding…' : 'Add person'}
+        {loading ? 'Adding…' : 'Add legal entity'}
       </button>
     </form>
   )

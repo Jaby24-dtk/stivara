@@ -322,3 +322,54 @@ create policy "Org members can write audit logs for their org" on public.audit_l
 -- No update/delete policy: RLS default-denies both, so audit rows are
 -- immutable even to org members — satisfies "cannot delete or overwrite
 -- audit logs" without needing a trigger.
+
+-- ---------------------------------------------------------------------------
+-- STIVARA_V2 Phase 1, Milestone 2 — Legal entities + role_assignments expansion
+-- ---------------------------------------------------------------------------
+
+-- Corporate parties (shareholders, holding companies, auditors, banks,
+-- service providers) — distinct from public.organizations (the platform
+-- tenant/firm) and from public.people (natural persons).
+create table if not exists public.legal_entities (
+  id uuid primary key default uuid_generate_v4(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null,
+  entity_category text not null check (entity_category in
+    ('company', 'bank', 'auditor', 'service_provider', 'government_body', 'other')),
+  jurisdiction text,
+  registration_number text,
+  registered_address text,
+  linked_company_id uuid references public.companies(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.legal_entities enable row level security;
+create policy "Org members can read legal_entities" on public.legal_entities
+  for select using (organization_id = public.current_org_id());
+create policy "Org members can write legal_entities" on public.legal_entities
+  for all using (organization_id = public.current_org_id());
+
+-- Allow a role_assignment to be held by a legal entity instead of a person.
+alter table public.role_assignments alter column person_id drop not null;
+alter table public.role_assignments add column if not exists legal_entity_id uuid references public.legal_entities(id) on delete cascade;
+alter table public.role_assignments add column if not exists is_nominee boolean not null default false;
+alter table public.role_assignments add column if not exists nominator text;
+
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'role_assignments_holder_exclusive') then
+    alter table public.role_assignments add constraint role_assignments_holder_exclusive
+      check ((person_id is not null and legal_entity_id is null) or (person_id is null and legal_entity_id is not null));
+  end if;
+end $$;
+
+-- Widen role_assignments.role to cover the V2 "key appointments" list.
+-- Purely additive — existing values (director/shareholder/officer/
+-- beneficial_owner) remain valid, so no existing row can violate this.
+alter table public.role_assignments drop constraint if exists role_assignments_role_check;
+alter table public.role_assignments add constraint role_assignments_role_check check (role in (
+  'director', 'shareholder', 'officer', 'beneficial_owner',
+  'nominee_director', 'nominee_shareholder', 'registrable_controller', 'company_secretary',
+  'ceo', 'auditor', 'dpo', 'tax_agent', 'accountant', 'authorised_filing_agent', 'bank_signatory'
+));

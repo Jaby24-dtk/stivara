@@ -67,15 +67,44 @@ export type Person = {
   created_at: string
 }
 
+// Corporate shareholders, holding companies, auditors, banks, and service
+// providers — distinct from Organization (the platform tenant/firm) and
+// from Person (natural persons).
+export type LegalEntity = {
+  id: string
+  organization_id: string
+  name: string
+  entity_category: 'company' | 'bank' | 'auditor' | 'service_provider' | 'government_body' | 'other'
+  jurisdiction: string | null
+  registration_number: string | null
+  registered_address: string | null
+  linked_company_id: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+// A corporate appointment (this person/entity's role at a company) — not to
+// be confused with UserRow.role, which is the platform login's own
+// permission tier. Both can share literal strings (e.g. 'director') but
+// mean unrelated things.
+export type CorporateRole =
+  | 'director' | 'shareholder' | 'officer' | 'beneficial_owner'
+  | 'nominee_director' | 'nominee_shareholder' | 'registrable_controller' | 'company_secretary'
+  | 'ceo' | 'auditor' | 'dpo' | 'tax_agent' | 'accountant' | 'authorised_filing_agent' | 'bank_signatory'
+
 export type RoleAssignment = {
   id: string
-  person_id: string
+  person_id: string | null
+  legal_entity_id: string | null
   company_id: string
-  role: 'director' | 'shareholder' | 'officer' | 'beneficial_owner'
+  role: CorporateRole
   start_date: string
   end_date: string | null
   share_count: number | null
   share_class: string | null
+  is_nominee: boolean
+  nominator: string | null
 }
 
 export type FundingRound = {

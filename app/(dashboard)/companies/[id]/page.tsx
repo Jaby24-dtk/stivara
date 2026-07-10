@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { Company, ComplianceEvent, Document, FundingRound, Milestone, Person, RoleAssignment, Task } from '@/lib/types'
+import type { Company, ComplianceEvent, Document, FundingRound, LegalEntity, Milestone, Person, RoleAssignment, Task } from '@/lib/types'
 import { UploadDocumentButton } from '@/components/documents/UploadDocumentButton'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 import { AddPersonButton } from '@/components/people/AddPersonButton'
+import { AddLegalEntityButton } from '@/components/legalEntities/AddLegalEntityButton'
 import { RemoveRoleButton } from '@/components/people/RemoveRoleButton'
 import { DirectorAppointmentWizard } from '@/components/people/DirectorAppointmentWizard'
 import { ResolutionGenerator } from '@/components/resolutions/ResolutionGenerator'
@@ -21,13 +22,9 @@ import { computeCompanyHealth, computeMissionControl, deriveEventStatus, type Ev
 import { getJurisdictionLabel } from '@/lib/reference/jurisdictions'
 import { buildRecommendations } from '@/lib/compliance/recommendations'
 import { buildTimeline } from '@/lib/compliance/timeline'
+import { CORPORATE_ROLE_LABELS } from '@/lib/reference/corporateRoles'
 
-const roleLabel: Record<RoleAssignment['role'], string> = {
-  director: 'Director',
-  shareholder: 'Shareholder',
-  officer: 'Officer',
-  beneficial_owner: 'Beneficial owner',
-}
+const roleLabel = CORPORATE_ROLE_LABELS
 
 const healthBadge: Record<HealthStatus, string> = {
   green: 'badge-success',
@@ -59,7 +56,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     supabase.from('compliance_events').select('*').eq('company_id', id).order('due_date'),
     supabase.from('tasks').select('*').eq('company_id', id).order('due_date', { ascending: true, nullsFirst: false }),
     supabase.from('documents').select('*').eq('company_id', id).order('created_at', { ascending: false }),
-    supabase.from('role_assignments').select('*, people(name, email)').eq('company_id', id).order('start_date'),
+    supabase.from('role_assignments').select('*, people(name, email), legal_entities(name)').eq('company_id', id).order('start_date'),
     supabase.from('funding_rounds').select('*').eq('company_id', id).order('closed_date', { ascending: false }),
     supabase.from('milestones').select('*').eq('company_id', id).order('event_date', { ascending: false }),
   ])
@@ -70,7 +67,10 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
   const documentList = (documents ?? []) as Document[]
   const fundingRoundList = (fundingRounds ?? []) as FundingRound[]
   const milestoneList = (milestones ?? []) as Milestone[]
-  type RoleAssignmentRow = RoleAssignment & { people: Pick<Person, 'name' | 'email'> | null }
+  type RoleAssignmentRow = RoleAssignment & {
+    people: Pick<Person, 'name' | 'email'> | null
+    legal_entities: Pick<LegalEntity, 'name'> | null
+  }
   // Includes past (resigned/removed) assignments too — needed for the
   // timeline's history. The People card below filters to active-only.
   const roleAssignmentList = (roleAssignments ?? []) as unknown as RoleAssignmentRow[]
@@ -226,6 +226,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <h2 className="text-lg font-bold text-slate-900">People</h2>
           <div className="flex items-center gap-2">
             <DirectorAppointmentWizard companyId={id} />
+            <AddLegalEntityButton companyId={id} />
             <AddPersonButton companyId={id} />
           </div>
         </div>
@@ -233,11 +234,15 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
           <p className="text-sm text-slate-500">No directors, shareholders, or officers on record yet.</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {activeRoleAssignmentList.map((r) => (
+            {activeRoleAssignmentList.map((r) => {
+              const holderName = r.people?.name ?? r.legal_entities?.name ?? '—'
+              return (
               <li key={r.id} className="flex items-center justify-between text-sm py-1 border-b border-slate-100 last:border-0">
                 <div>
-                  <span className="text-slate-900 font-medium">{r.people?.name ?? '—'}</span>
+                  <span className="text-slate-900 font-medium">{holderName}</span>
                   {r.people?.email && <span className="text-slate-400 ml-2">{r.people.email}</span>}
+                  {r.legal_entity_id && <span className="text-slate-400 ml-2">(legal entity)</span>}
+                  {r.is_nominee && <span className="badge badge-gray ml-2">nominee</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   {r.role === 'shareholder' && (
@@ -249,7 +254,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   {r.role === 'shareholder' && (
                     <EditShareholdingButton
                       roleAssignmentId={r.id}
-                      personName={r.people?.name ?? 'this shareholder'}
+                      personName={holderName}
                       shareCount={r.share_count}
                       shareClass={r.share_class}
                     />
@@ -257,7 +262,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <RemoveRoleButton roleAssignmentId={r.id} />
                 </div>
               </li>
-            ))}
+              )
+            })}
           </ul>
         )}
       </div>

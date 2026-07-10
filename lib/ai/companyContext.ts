@@ -13,6 +13,17 @@ const roleLabel: Record<string, string> = {
   shareholder: 'shareholder',
   officer: 'officer',
   beneficial_owner: 'beneficial owner',
+  nominee_director: 'nominee director',
+  nominee_shareholder: 'nominee shareholder',
+  registrable_controller: 'registrable controller',
+  company_secretary: 'company secretary',
+  ceo: 'CEO',
+  auditor: 'auditor',
+  dpo: 'DPO',
+  tax_agent: 'tax agent',
+  accountant: 'accountant',
+  authorised_filing_agent: 'authorised filing agent',
+  bank_signatory: 'bank signatory',
 }
 
 export async function buildCompanyContext(companyId: string): Promise<string> {
