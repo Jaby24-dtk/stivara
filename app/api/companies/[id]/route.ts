@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { provisionComplianceEvents } from '@/lib/compliance/provisioning'
+import { logAudit } from '@/lib/audit/log'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
@@ -34,8 +35,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   // Fetched before the update so a real jurisdiction/FYE change can be
   // detected below — compliance_events are computed once at creation from
-  // these two fields and never kept in sync automatically otherwise.
-  const { data: before } = await supabase.from('companies').select('jurisdiction, fye').eq('id', id).single()
+  // these two fields and never kept in sync automatically otherwise. Also
+  // doubles as the audit log's old_value.
+  const { data: before } = await supabase.from('companies').select('*').eq('id', id).single()
 
   // RLS scopes this update to companies in the caller's org.
   const { data: company, error } = await supabase
@@ -47,6 +49,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (!company) return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'companies',
+    recordId: company.id,
+    action: 'update',
+    oldValue: before,
+    newValue: company,
+    request,
+  })
 
   const jurisdictionOrFyeChanged = before && (company.jurisdiction !== before.jurisdiction || company.fye !== before.fye)
   let warning: string | undefined
@@ -87,7 +101,7 @@ async function regenerateComplianceEvents(
 // supabase/schema.sql) — this is a real, irreversible delete, not a soft one.
 // Uploaded files in Storage are not cleaned up by this cascade; they're left
 // orphaned rather than risk deleting the wrong path.
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -95,10 +109,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const supabase = await createClient()
 
   // Verify org ownership explicitly so a company outside the caller's org
-  // reports 404 instead of RLS silently deleting zero rows.
+  // reports 404 instead of RLS silently deleting zero rows. Full row also
+  // doubles as the audit log's old_value, since it won't exist to re-fetch
+  // after the delete.
   const { data: company } = await supabase
     .from('companies')
-    .select('id')
+    .select('*')
     .eq('id', id)
     .eq('organization_id', user.organization_id)
     .single()
@@ -106,5 +122,17 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   const { error } = await supabase.from('companies').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'companies',
+    recordId: id,
+    action: 'delete',
+    oldValue: company,
+    request,
+  })
+
   return NextResponse.json({ success: true })
 }

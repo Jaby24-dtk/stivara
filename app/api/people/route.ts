@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { logAudit } from '@/lib/audit/log'
 
 const VALID_ROLES = ['director', 'shareholder', 'officer', 'beneficial_owner']
 
@@ -37,6 +38,17 @@ export async function POST(request: Request) {
     .single()
   if (personError) return NextResponse.json({ error: personError.message }, { status: 400 })
 
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'people',
+    recordId: person.id,
+    action: 'create',
+    newValue: person,
+    request,
+  })
+
   const { data: roleAssignment, error: roleError } = await supabase
     .from('role_assignments')
     .insert({
@@ -50,6 +62,17 @@ export async function POST(request: Request) {
     .select()
     .single()
   if (roleError) return NextResponse.json({ error: roleError.message }, { status: 400 })
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'role_assignments',
+    recordId: roleAssignment.id,
+    action: 'create',
+    newValue: roleAssignment,
+    request,
+  })
 
   return NextResponse.json({ person, roleAssignment })
 }

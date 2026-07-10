@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { generateDirectorAppointmentPack } from '@/lib/documents/directorAppointment'
+import { logAudit } from '@/lib/audit/log'
 
 const ACRA_NOTIFICATION_WINDOW_DAYS = 14
 
@@ -60,6 +61,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     await supabase.from('people').delete().eq('id', person.id)
     return NextResponse.json({ error: roleError.message }, { status: 400 })
   }
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'role_assignments',
+    recordId: roleAssignment.id,
+    action: 'create',
+    newValue: roleAssignment,
+    request,
+  })
 
   const document = await generateDirectorAppointmentPack({
     companyName: company.name,

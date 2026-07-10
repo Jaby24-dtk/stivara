@@ -293,3 +293,32 @@ create policy "Org members can read their documents in storage"
 create policy "Org members can upload documents to storage"
   on storage.objects for insert
   with check (bucket_id = 'documents' and (storage.foldername(name))[1] = public.current_org_id()::text);
+
+-- ---------------------------------------------------------------------------
+-- STIVARA_V2 Phase 1, Milestone 1 — Audit logs
+-- Immutable (no update/delete RLS policy — default-denied), org-scoped.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.audit_logs (
+  id uuid primary key default uuid_generate_v4(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  actor_user_id uuid references public.users(id) on delete set null,
+  table_name text not null,
+  record_id uuid,
+  action text not null check (action in ('create', 'update', 'delete', 'view_sensitive')),
+  old_value jsonb,
+  new_value jsonb,
+  ip_address text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.audit_logs enable row level security;
+
+create policy "Org members can read their org's audit logs" on public.audit_logs
+  for select using (organization_id = public.current_org_id());
+create policy "Org members can write audit logs for their org" on public.audit_logs
+  for insert with check (organization_id = public.current_org_id());
+-- No update/delete policy: RLS default-denies both, so audit rows are
+-- immutable even to org members — satisfies "cannot delete or overwrite
+-- audit logs" without needing a trigger.

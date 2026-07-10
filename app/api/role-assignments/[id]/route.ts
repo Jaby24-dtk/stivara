@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { logAudit } from '@/lib/audit/log'
 
 // Two uses of the same endpoint: ending a role assignment (e.g. a director
 // resigning) by setting end_date — the person and history stay on record,
@@ -29,6 +30,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const supabase = await createClient()
+  const { data: before } = await supabase.from('role_assignments').select('*').eq('id', id).single()
+
   // RLS scopes this update to role assignments whose company belongs to the caller's org.
   const { data: roleAssignment, error } = await supabase
     .from('role_assignments')
@@ -39,5 +42,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   if (!roleAssignment) return NextResponse.json({ error: 'Role assignment not found' }, { status: 404 })
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'role_assignments',
+    recordId: roleAssignment.id,
+    action: 'update',
+    oldValue: before,
+    newValue: roleAssignment,
+    request,
+  })
+
   return NextResponse.json({ roleAssignment })
 }

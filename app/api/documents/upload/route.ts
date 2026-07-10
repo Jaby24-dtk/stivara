@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { isEmbeddingsConfigured } from '@/lib/ai/embeddings'
 import { indexDocument } from '@/lib/ai/documentSearch'
+import { logAudit } from '@/lib/audit/log'
 
 // Only text-like files are indexed for AI search in this scaffold — full
 // OCR/PDF-text-extraction is a Phase 1+ integration (brief Section 10).
@@ -39,6 +40,17 @@ export async function POST(request: Request) {
     .select()
     .single()
   if (docError) return NextResponse.json({ error: docError.message }, { status: 400 })
+
+  await logAudit({
+    supabase,
+    organizationId: user.organization_id,
+    actorUserId: user.id,
+    tableName: 'documents',
+    recordId: doc.id,
+    action: 'create',
+    newValue: doc,
+    request,
+  })
 
   // Indexing is best-effort: a Gemini outage or bad key shouldn't fail the
   // upload itself, since the document is already safely stored.
