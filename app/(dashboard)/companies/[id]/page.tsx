@@ -15,6 +15,8 @@ import { EditShareholdingButton } from '@/components/companies/EditShareholdingB
 import { AddFundingRoundButton } from '@/components/companies/AddFundingRoundButton'
 import { AddMilestoneButton } from '@/components/companies/AddMilestoneButton'
 import { AiSuggestions } from '@/components/companies/AiSuggestions'
+import { EditCompanyButton } from '@/components/companies/EditCompanyButton'
+import { DeleteCompanyButton } from '@/components/companies/DeleteCompanyButton'
 import { computeCompanyHealth, computeMissionControl, deriveEventStatus, type EventStatus, type HealthStatus } from '@/lib/compliance/health'
 import { buildRecommendations } from '@/lib/compliance/recommendations'
 import { buildTimeline } from '@/lib/compliance/timeline'
@@ -107,7 +109,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             {companyRow.jurisdiction} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
           </p>
         </div>
-        <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
+        <div className="flex items-center gap-2">
+          <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
+          <EditCompanyButton company={companyRow} />
+          <DeleteCompanyButton companyId={id} companyName={companyRow.name} />
+        </div>
       </div>
 
       <div className="card p-6">
