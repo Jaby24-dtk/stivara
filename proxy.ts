@@ -33,12 +33,16 @@ export async function proxy(request: NextRequest) {
   const isRoot = pathname === '/'
   const isPublicPage = pathname === '/trust'
   const isApiRoute = pathname.startsWith('/api/')
+  // The STIV SSO bridge lands here unauthenticated — it establishes the
+  // session client-side via setSession() using tokens minted by STIV, so it
+  // must be reachable before a session cookie exists.
+  const isSsoBridge = pathname === '/sso'
 
   // API routes handle their own auth (401 JSON) — never redirect them to a page
   if (isApiRoute) return response
 
   // Redirect unauthenticated users to /login
-  if (!user && !isAuthPage && !isRoot && !isPublicPage) {
+  if (!user && !isAuthPage && !isRoot && !isPublicPage && !isSsoBridge) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
