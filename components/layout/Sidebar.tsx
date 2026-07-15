@@ -1,9 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, Building2, CalendarClock, ListChecks, FileText, Sparkles, Settings, LogOut } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname } from 'next/navigation'
+import { LayoutDashboard, Building2, CalendarClock, ListChecks, FileText, Sparkles, Settings } from 'lucide-react'
 
 const links = [
   { href: '/dashboard', label: 'Mission Control', icon: LayoutDashboard },
@@ -17,14 +16,6 @@ const links = [
 
 export function Sidebar({ userName, orgName }: { userName: string; orgName: string }) {
   const pathname = usePathname()
-  const router = useRouter()
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
 
   return (
     <aside
@@ -57,10 +48,6 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
       </nav>
       <div className="border-t border-white/10 pt-3 mt-3">
         <p className="text-slate-400 text-xs px-2 mb-2 truncate">{userName}</p>
-        <button onClick={handleSignOut} className="sidebar-link w-full">
-          <LogOut size={16} />
-          Sign out
-        </button>
       </div>
     </aside>
   )
