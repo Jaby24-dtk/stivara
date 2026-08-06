@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -13,17 +13,29 @@ import { createClient } from '@/lib/supabase/client'
 export default function SsoBridgePage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const sessionHandoffStarted = useRef(false)
 
   useEffect(() => {
+    // The refresh token is single-use. React may re-run effects in development,
+    // and the page can also be remounted while the async request is in flight.
+    // Never submit the same handoff twice.
+    if (sessionHandoffStarted.current) return
+    sessionHandoffStarted.current = true
+
     const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash
     const params = new URLSearchParams(hash)
     const access_token = params.get('access_token')
     const refresh_token = params.get('refresh_token')
 
     if (!access_token || !refresh_token) {
-      setError('Missing sign-in tokens.')
+      queueMicrotask(() => setError('Missing sign-in tokens.'))
       return
     }
+
+    // Remove credentials before calling Supabase. Besides keeping tokens out of
+    // browser history, this makes a real remount fail closed instead of reusing
+    // a refresh token that may already have been rotated.
+    window.history.replaceState({}, '', '/sso')
 
     const supabase = createClient()
     supabase.auth.setSession({ access_token, refresh_token }).then(({ error: sessionError }) => {
@@ -31,7 +43,6 @@ export default function SsoBridgePage() {
         setError(sessionError.message)
         return
       }
-      window.history.replaceState({}, '', '/sso')
       router.replace('/dashboard')
     })
   }, [router])
