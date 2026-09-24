@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { AddUserButton } from '@/components/users/AddUserButton'
 import { EditUserButton } from '@/components/users/EditUserButton'
-import { PLATFORM_ROLE_LABELS, assignableRoles, canManageUser, canManageUsers } from '@/lib/users/permissions'
+import { PLATFORM_ROLE_LABELS, RETIRED_ROLES, assignableRoles, canManageUser, canManageUsers, rolePermissions } from '@/lib/users/permissions'
 import type { UserRow } from '@/lib/types'
 
 export default async function SettingsPage() {
@@ -35,7 +35,7 @@ export default async function SettingsPage() {
         </div>
         <div>
           <p className="text-xs text-slate-500">Role</p>
-          <p className="text-slate-900 font-medium">{user.role.replace('_', ' ')}</p>
+          <p className="text-slate-900 font-medium">{PLATFORM_ROLE_LABELS[user.role]}</p>
         </div>
       </div>
 
@@ -46,10 +46,15 @@ export default async function SettingsPage() {
         </div>
         <ul className="flex flex-col divide-y divide-slate-100">
           {(members as Pick<UserRow, 'id' | 'name' | 'email' | 'role'>[] | null)?.map((m) => (
-            <li key={m.id} className="py-2 flex items-center justify-between gap-3">
+            <li key={m.id} className="py-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-slate-900 font-medium truncate">{m.name}{m.id === user.id && ' (you)'}</p>
                 <p className="text-xs text-slate-500 truncate">{m.email}</p>
+                <ul className="mt-1.5 flex flex-col gap-0.5">
+                  {rolePermissions(m.role).map((p) => (
+                    <li key={p} className="text-xs text-slate-600">• {p}</li>
+                  ))}
+                </ul>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <span className="badge badge-gray">{PLATFORM_ROLE_LABELS[m.role]}</span>
@@ -58,6 +63,24 @@ export default async function SettingsPage() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="card p-6 flex flex-col gap-4">
+        <h2 className="text-lg font-bold text-slate-900">Roles &amp; permissions</h2>
+        <div className="flex flex-col gap-4">
+          {(Object.keys(PLATFORM_ROLE_LABELS) as UserRow['role'][])
+            .filter((r) => !RETIRED_ROLES.includes(r))
+            .map((r) => (
+              <div key={r}>
+                <p className="text-slate-900 font-medium">{PLATFORM_ROLE_LABELS[r]}</p>
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {rolePermissions(r).map((p) => (
+                    <li key={p} className="text-sm text-slate-600">• {p}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+        </div>
       </div>
     </div>
   )

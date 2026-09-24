@@ -13,7 +13,8 @@ export function EditUserButton({ member, roles }: { member: Member; roles: Platf
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(member.name)
-  const [role, setRole] = useState<PlatformRole>(member.role)
+  // A user on a retired role can't keep it, so preselect a valid one.
+  const [role, setRole] = useState<PlatformRole>(roles.includes(member.role) ? member.role : 'client_user')
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
