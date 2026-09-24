@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { canEditData } from '@/lib/users/permissions'
 import type { Company } from '@/lib/types'
 import { AddCompanyButton } from '@/components/companies/AddCompanyButton'
 import { HealthLegend } from '@/components/companies/HealthLegend'
@@ -13,6 +15,7 @@ const statusBadge: Record<HealthStatus, string> = {
 }
 
 export default async function CompaniesPage() {
+  const canEdit = canEditData((await getCurrentUser())?.role ?? 'client_user')
   const supabase = await createClient()
   const { data: companies } = await supabase.from('companies').select('*').order('name')
   const companyList = (companies ?? []) as Company[]
@@ -42,7 +45,7 @@ export default async function CompaniesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Companies</h1>
-        <AddCompanyButton />
+        {canEdit && <AddCompanyButton />}
       </div>
 
       <HealthLegend />

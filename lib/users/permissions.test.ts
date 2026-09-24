@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assignableRoles, canAssignRole, canManageUser, canManageUsers, rolePermissions } from './permissions'
+import { assignableRoles, canAssignRole, canEditData, canManageUser, canManageUsers, canViewSensitive, rolePermissions } from './permissions'
+import { requireEditor } from './guards'
 
 describe('user management permissions', () => {
   it('lets super admins assign every active role', () => {
@@ -49,5 +50,28 @@ describe('user management permissions', () => {
     expect(rolePermissions('super_admin')).toContain('Add, edit and remove all users')
     expect(rolePermissions('client_admin')).toContain('Add, edit and remove client admins and client users')
     expect(rolePermissions('client_user')).toContain('Cannot manage users')
+  })
+
+  it('only lets admin roles edit data or reveal sensitive fields', () => {
+    expect(canEditData('super_admin')).toBe(true)
+    expect(canEditData('client_admin')).toBe(true)
+    expect(canEditData('client_user')).toBe(false)
+    expect(canEditData('practice_staff')).toBe(false)
+    expect(canViewSensitive('client_user')).toBe(false)
+    expect(canViewSensitive('super_admin')).toBe(true)
+  })
+
+  it('returns 403 from the API guard for view-only users', () => {
+    expect(requireEditor({ role: 'client_user' })?.status).toBe(403)
+    expect(requireEditor({ role: 'client_admin' })).toBeNull()
+  })
+
+  it('describes client users as view-only with task updates', () => {
+    expect(rolePermissions('client_user')).toEqual([
+      'View all companies, people, documents and tasks (view only)',
+      'Update task status',
+      'Use the AI assistant',
+      'Cannot manage users',
+    ])
   })
 })

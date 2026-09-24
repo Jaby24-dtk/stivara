@@ -56,7 +56,7 @@ const AUDIT_EXEMPTION_STATUSES = ['exempt', 'review_required', 'not_exempt']
 
 const label = (s: string) => s.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 
-export function CompanyProfileForm({ company, otherCompanies }: { company: Company; otherCompanies: { id: string; name: string }[] }) {
+export function CompanyProfileForm({ company, otherCompanies, readOnly = false }: { company: Company; otherCompanies: { id: string; name: string }[]; readOnly?: boolean }) {
   const router = useRouter()
   const [tab, setTab] = useState<'identity' | 'classification'>('identity')
   const [saving, setSaving] = useState(false)
@@ -211,9 +211,13 @@ export function CompanyProfileForm({ company, otherCompanies }: { company: Compa
       )}
 
       <div className="flex items-center gap-3 mt-6 pt-4 border-t border-slate-100">
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : 'Save profile'}
-        </button>
+        {readOnly ? (
+          <span className="text-sm text-slate-500">View only — ask an admin to make changes.</span>
+        ) : (
+          <button className="btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save profile'}
+          </button>
+        )}
         {saved && <span className="text-sm text-teal-700">Saved</span>}
         {error && <span className="text-sm text-red-600">{error}</span>}
       </div>

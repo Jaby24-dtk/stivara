@@ -15,6 +15,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const supabase = await createClient()
+
+  // set_task_status() (supabase/migrations/2026-09-24-role-based-access.sql)
+  // is the one write view-only roles may make: it updates the task and
+  // syncs its compliance event in one step, scoped to the caller's org.
+  // Until that migration is applied, fall back to the direct updates below.
+  const { data: rpcTask, error: rpcError } = await supabase
+    .rpc('set_task_status', { p_task_id: id, p_status: status })
+    .maybeSingle()
+  if (!rpcError) {
+    if (!rpcTask) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    return NextResponse.json({ task: rpcTask })
+  }
+  if (rpcError.code !== 'PGRST202') return NextResponse.json({ error: rpcError.message }, { status: 400 })
+
   // RLS scopes this update to tasks whose company belongs to the caller's org.
   const { data: task, error } = await supabase
     .from('tasks')

@@ -17,7 +17,7 @@ const SANCTIONS_STATUSES = ['not_screened', 'clear', 'flagged', 'under_review']
 const PEP_STATUSES = ['not_pep', 'pep', 'pep_associate', 'unknown']
 const label = (s: string) => s.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 
-export function PersonDetailsForm({ person }: { person: Person }) {
+export function PersonDetailsForm({ person, readOnly = false }: { person: Person; readOnly?: boolean }) {
   const router = useRouter()
   const [name, setName] = useState(person.name)
   const [email, setEmail] = useState(person.email ?? '')
@@ -124,7 +124,7 @@ export function PersonDetailsForm({ person }: { person: Person }) {
       <div className="mt-5 pt-5 border-t border-slate-100">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sensitive fields (encrypted at rest)</p>
-          {!revealed && (
+          {!revealed && !readOnly && (
             <button type="button" className="btn-secondary btn-sm" onClick={handleReveal} disabled={revealing}>
               <Eye size={14} />
               {revealing ? 'Revealing…' : 'Reveal to edit'}
@@ -184,9 +184,13 @@ export function PersonDetailsForm({ person }: { person: Person }) {
       </div>
 
       <div className="flex items-center gap-3 mt-6 pt-4 border-t border-slate-100">
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : 'Save'}
-        </button>
+        {readOnly ? (
+          <span className="text-sm text-slate-500">View only — ask an admin to make changes.</span>
+        ) : (
+          <button className="btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        )}
         {saved && <span className="text-sm text-teal-700">Saved</span>}
         {error && <span className="text-sm text-red-600">{error}</span>}
       </div>

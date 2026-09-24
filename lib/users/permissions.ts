@@ -45,15 +45,30 @@ export function canManageUser(actor: Pick<UserRow, 'id' | 'role'>, target: Pick<
   return canAssignRole(actor.role, target.role)
 }
 
-// Plain-language summary of what a role can do, shown on Settings. Data
-// access is org-wide for every role (Phase 0 RLS, see supabase/schema.sql);
-// only user management differs by role today.
+// Plain-language summary of what a role can do, shown on Settings.
 export function rolePermissions(role: PlatformRole): string[] {
-  const permissions = ['View and edit all companies, people, documents and tasks', 'Use the AI assistant']
+  const permissions = canEditData(role)
+    ? ['View and edit all companies, people, documents and tasks', 'Reveal encrypted ID numbers and addresses']
+    : ['View all companies, people, documents and tasks (view only)', 'Update task status']
+  permissions.push('Use the AI assistant')
   const roles = assignableRoles(role)
   if (role === 'super_admin') permissions.push('Add, edit and remove all users')
   else if (roles.length > 0) {
     permissions.push(`Add, edit and remove ${roles.map((r) => PLATFORM_ROLE_LABELS[r].toLowerCase() + 's').join(' and ')}`)
   } else permissions.push('Cannot manage users')
   return permissions
+}
+
+// Roles that may create/edit/delete company data. Everyone else in the org
+// is view-only (they can still change task status). Enforced in the DB by
+// public.current_user_can_edit() — keep the two lists in sync.
+const EDITOR_ROLES: PlatformRole[] = ['super_admin', 'client_admin']
+
+export function canEditData(role: PlatformRole): boolean {
+  return EDITOR_ROLES.includes(role)
+}
+
+// Decrypting ID numbers / residential addresses is admin-only.
+export function canViewSensitive(role: PlatformRole): boolean {
+  return canEditData(role)
 }

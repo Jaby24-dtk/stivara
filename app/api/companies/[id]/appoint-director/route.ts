@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { requireEditor } from '@/lib/users/guards'
 import { generateDirectorAppointmentPack } from '@/lib/documents/directorAppointment'
 import { logAudit } from '@/lib/audit/log'
 
@@ -15,6 +16,8 @@ const ACRA_NOTIFICATION_WINDOW_DAYS = 14
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const forbidden = requireEditor(user)
+  if (forbidden) return forbidden
 
   const { id: companyId } = await params
   const { name, email, effectiveDate } = await request.json()

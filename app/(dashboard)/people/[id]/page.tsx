@@ -2,12 +2,15 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { canEditData } from '@/lib/users/permissions'
 import type { Person, RoleAssignment, Company } from '@/lib/types'
 import { PersonDetailsForm } from '@/components/people/PersonDetailsForm'
 import { CORPORATE_ROLE_LABELS } from '@/lib/reference/corporateRoles'
 
 export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const canEdit = canEditData((await getCurrentUser())?.role ?? 'client_user')
   const supabase = await createClient()
 
   const { data: person } = await supabase.from('people').select('*').eq('id', id).single()
@@ -52,7 +55,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
         </div>
       )}
 
-      <PersonDetailsForm person={person as Person} />
+      <PersonDetailsForm person={person as Person} readOnly={!canEdit} />
     </div>
   )
 }

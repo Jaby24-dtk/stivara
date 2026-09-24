@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { requireEditor } from '@/lib/users/guards'
 import { isEmbeddingsConfigured } from '@/lib/ai/embeddings'
 import { indexDocument } from '@/lib/ai/documentSearch'
 import { logAudit } from '@/lib/audit/log'
@@ -12,6 +13,8 @@ const INDEXABLE_TYPES = ['text/plain', 'text/markdown', 'application/json']
 export async function POST(request: Request) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const forbidden = requireEditor(user)
+  if (forbidden) return forbidden
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null

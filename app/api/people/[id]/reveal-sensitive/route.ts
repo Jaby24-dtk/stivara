@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { canViewSensitive } from '@/lib/users/permissions'
 import { logAudit } from '@/lib/audit/log'
 import { decryptPII } from '@/lib/security/pii'
 
 // Single chokepoint for decrypting id_number/residential_address — every
-// call is logged as a view_sensitive audit event. Not yet role-gated (that
-// lands in Milestone 5 once real per-user roles exist to gate against);
-// today it's still behind normal auth + org-scoped RLS.
+// call is logged as a view_sensitive audit event. Admin roles only.
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!canViewSensitive(user.role)) {
+    return NextResponse.json({ error: 'Only admins can reveal sensitive fields' }, { status: 403 })
+  }
 
   const { id } = await params
   const supabase = await createClient()

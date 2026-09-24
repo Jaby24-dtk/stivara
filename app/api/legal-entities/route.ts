@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { requireEditor } from '@/lib/users/guards'
 import { logAudit } from '@/lib/audit/log'
 import { CORPORATE_ROLE_LABELS } from '@/lib/reference/corporateRoles'
 
@@ -13,6 +14,8 @@ const VALID_CATEGORIES = ['company', 'bank', 'auditor', 'service_provider', 'gov
 export async function POST(request: Request) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const forbidden = requireEditor(user)
+  if (forbidden) return forbidden
 
   const body = await request.json()
   const {

@@ -2,11 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { canEditData } from '@/lib/users/permissions'
 import type { Company } from '@/lib/types'
 import { CompanyProfileForm } from '@/components/companies/CompanyProfileForm'
 
 export default async function CompanySettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const canEdit = canEditData((await getCurrentUser())?.role ?? 'client_user')
   const supabase = await createClient()
 
   const [{ data: company }, { data: otherCompanies }] = await Promise.all([
@@ -26,7 +29,7 @@ export default async function CompanySettingsPage({ params }: { params: Promise<
         <p className="text-sm text-slate-500 mt-1">Identity, registration, and compliance classification details.</p>
       </div>
 
-      <CompanyProfileForm company={company as Company} otherCompanies={otherCompanies ?? []} />
+      <CompanyProfileForm company={company as Company} otherCompanies={otherCompanies ?? []} readOnly={!canEdit} />
     </div>
   )
 }

@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { canEditData } from '@/lib/users/permissions'
 import type { Company, Task } from '@/lib/types'
 import { AddTaskButton } from '@/components/tasks/AddTaskButton'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
 
 export default async function TasksPage() {
+  const canEdit = canEditData((await getCurrentUser())?.role ?? 'client_user')
   const supabase = await createClient()
   const [{ data: tasks }, { data: companies }] = await Promise.all([
     supabase.from('tasks').select('*, companies(name)').order('due_date', { ascending: true, nullsFirst: false }),
@@ -19,7 +22,7 @@ export default async function TasksPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tasks</h1>
-        <AddTaskButton companies={companyList} />
+        {canEdit && <AddTaskButton companies={companyList} />}
       </div>
 
       <div className="card p-6">

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { canEditData } from '@/lib/users/permissions'
 import type { Company, ComplianceEvent, Document, FundingRound, LegalEntity, Milestone, Person, RoleAssignment, Task } from '@/lib/types'
 import { UploadDocumentButton } from '@/components/documents/UploadDocumentButton'
 import { TaskStatusSelect } from '@/components/tasks/TaskStatusSelect'
@@ -47,6 +49,7 @@ const eventStatusBadge: Record<EventStatus, string> = {
 
 export default async function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const canEdit = canEditData((await getCurrentUser())?.role ?? 'client_user')
   const supabase = await createClient()
 
   const { data: company } = await supabase.from('companies').select('*').eq('id', id).single()
@@ -113,8 +116,8 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <div className="flex items-center gap-2">
           <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
           <Link href={`/companies/${id}/settings`} className="btn-secondary btn-sm">Full profile</Link>
-          <EditCompanyButton company={companyRow} />
-          <DeleteCompanyButton companyId={id} companyName={companyRow.name} />
+          {canEdit && <EditCompanyButton company={companyRow} />}
+          {canEdit && <DeleteCompanyButton companyId={id} companyName={companyRow.name} />}
         </div>
       </div>
 
@@ -136,11 +139,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-lg font-bold text-slate-900 mb-1">Corporate DNA</h2>
             <p className="text-sm text-slate-500">Ownership, funding, and legal/growth history for {companyRow.name}.</p>
           </div>
-          <EditCapitalButton
-            companyId={id}
-            issuedShareCapital={companyRow.issued_share_capital}
-            paidUpShareCapital={companyRow.paid_up_share_capital}
-          />
+          {canEdit && (
+            <EditCapitalButton
+              companyId={id}
+              issuedShareCapital={companyRow.issued_share_capital}
+              paidUpShareCapital={companyRow.paid_up_share_capital}
+            />
+          )}
         </div>
 
         <div>
@@ -168,7 +173,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-slate-700">Funding history</h3>
-            <AddFundingRoundButton companyId={id} />
+            {canEdit && <AddFundingRoundButton companyId={id} />}
           </div>
           {fundingRoundList.length === 0 ? (
             <p className="text-sm text-slate-500">No funding rounds on record yet.</p>
@@ -187,7 +192,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-slate-700">Legal &amp; growth milestones</h3>
-            <AddMilestoneButton companyId={id} />
+            {canEdit && <AddMilestoneButton companyId={id} />}
           </div>
           {milestoneList.length === 0 ? (
             <p className="text-sm text-slate-500">No milestones on record yet.</p>
@@ -225,11 +230,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">People</h2>
-          <div className="flex items-center gap-2">
-            <DirectorAppointmentWizard companyId={id} />
-            <AddLegalEntityButton companyId={id} />
-            <AddPersonButton companyId={id} />
-          </div>
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <DirectorAppointmentWizard companyId={id} />
+              <AddLegalEntityButton companyId={id} />
+              <AddPersonButton companyId={id} />
+            </div>
+          )}
         </div>
         {activeRoleAssignmentList.length === 0 ? (
           <p className="text-sm text-slate-500">No directors, shareholders, or officers on record yet.</p>
@@ -256,7 +263,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                     </span>
                   )}
                   <span className="badge badge-info">{roleLabel[r.role]}</span>
-                  {r.role === 'shareholder' && (
+                  {canEdit && r.role === 'shareholder' && (
                     <EditShareholdingButton
                       roleAssignmentId={r.id}
                       personName={holderName}
@@ -264,7 +271,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                       shareClass={r.share_class}
                     />
                   )}
-                  <RemoveRoleButton roleAssignmentId={r.id} />
+                  {canEdit && <RemoveRoleButton roleAssignmentId={r.id} />}
                 </div>
               </li>
               )
@@ -323,7 +330,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">Documents</h2>
-          <UploadDocumentButton companyId={id} />
+          {canEdit && <UploadDocumentButton companyId={id} />}
         </div>
         {documentList.length === 0 ? (
           <p className="text-sm text-slate-500">No documents uploaded yet.</p>
