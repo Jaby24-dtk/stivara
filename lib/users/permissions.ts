@@ -29,3 +29,10 @@ export function canManageUsers(role: PlatformRole): boolean {
 export function canAssignRole(actorRole: PlatformRole, targetRole: string): targetRole is PlatformRole {
   return (assignableRoles(actorRole) as string[]).includes(targetRole)
 }
+
+// An admin may edit/remove a user only if that user's current role is one
+// they could have assigned — so a client admin can't touch firm staff or a
+// super admin. Nobody manages their own account here, to avoid self-lockout.
+export function canManageUser(actor: Pick<UserRow, 'id' | 'role'>, target: Pick<UserRow, 'id' | 'role'>): boolean {
+  return actor.id !== target.id && canAssignRole(actor.role, target.role)
+}

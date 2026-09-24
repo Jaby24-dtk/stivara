@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 import { AddUserButton } from '@/components/users/AddUserButton'
-import { PLATFORM_ROLE_LABELS, assignableRoles, canManageUsers } from '@/lib/users/permissions'
+import { EditUserButton } from '@/components/users/EditUserButton'
+import { PLATFORM_ROLE_LABELS, assignableRoles, canManageUser, canManageUsers } from '@/lib/users/permissions'
 import type { UserRow } from '@/lib/types'
 
 export default async function SettingsPage() {
@@ -50,7 +51,10 @@ export default async function SettingsPage() {
                 <p className="text-slate-900 font-medium truncate">{m.name}{m.id === user.id && ' (you)'}</p>
                 <p className="text-xs text-slate-500 truncate">{m.email}</p>
               </div>
-              <span className="badge badge-gray shrink-0">{PLATFORM_ROLE_LABELS[m.role]}</span>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="badge badge-gray">{PLATFORM_ROLE_LABELS[m.role]}</span>
+                {canManageUser(user, m) && <EditUserButton member={m} roles={assignableRoles(user.role)} />}
+              </div>
             </li>
           ))}
         </ul>

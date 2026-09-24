@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assignableRoles, canAssignRole, canManageUsers } from './permissions'
+import { assignableRoles, canAssignRole, canManageUser, canManageUsers } from './permissions'
 
 describe('user management permissions', () => {
   it('lets super admins assign every role', () => {
@@ -21,5 +21,18 @@ describe('user management permissions', () => {
 
   it('rejects unknown role strings', () => {
     expect(canAssignRole('super_admin', 'owner')).toBe(false)
+  })
+
+  it('only lets admins manage other users they could have created', () => {
+    const superAdmin = { id: 'a', role: 'super_admin' as const }
+    const clientAdmin = { id: 'b', role: 'client_admin' as const }
+    expect(canManageUser(superAdmin, clientAdmin)).toBe(true)
+    expect(canManageUser(clientAdmin, superAdmin)).toBe(false)
+    expect(canManageUser(clientAdmin, { id: 'c', role: 'client_user' })).toBe(true)
+    expect(canManageUser(clientAdmin, { id: 'd', role: 'practice_staff' })).toBe(false)
+  })
+
+  it('never lets an admin manage their own account', () => {
+    expect(canManageUser({ id: 'a', role: 'super_admin' }, { id: 'a', role: 'super_admin' })).toBe(false)
   })
 })
