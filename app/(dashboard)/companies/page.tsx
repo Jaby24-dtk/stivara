@@ -54,39 +54,41 @@ export default async function CompaniesPage() {
         {companyList.length === 0 ? (
           <p className="text-sm text-slate-500">No companies yet.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-slate-500 border-b border-slate-200">
-                <th className="py-2 font-medium">Name</th>
-                <th className="py-2 font-medium">Jurisdiction</th>
-                <th className="py-2 font-medium">Entity type</th>
-                <th className="py-2 font-medium">FYE</th>
-                <th className="py-2 font-medium">Health</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companyList.map((c) => {
-                const health = healthByCompany.get(c.id)!
-                return (
-                  <tr key={c.id} className="table-row-hover border-b border-slate-100">
-                    <td className="py-2">
-                      <Link href={`/companies/${c.id}`} className="font-medium text-slate-900 hover:text-teal-700">
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="py-2 text-slate-600">{getJurisdictionLabel(c.jurisdiction, c.jurisdiction_other)}</td>
-                    <td className="py-2 text-slate-600">{c.entity_type ?? '—'}</td>
-                    <td className="py-2 text-slate-600">{c.fye}</td>
-                    <td className="py-2">
-                      <span className={`badge ${statusBadge[health.status]}`} title={health.reasons.map((r) => r.message).join('; ')}>
-                        {health.status}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-slate-500 border-b border-slate-200">
+                  <th className="py-2 font-medium">Name</th>
+                  <th className="py-2 font-medium">Jurisdiction</th>
+                  <th className="py-2 font-medium">Entity type</th>
+                  <th className="py-2 font-medium">FYE</th>
+                  <th className="py-2 font-medium">Health</th>
+                </tr>
+              </thead>
+              <tbody>
+                {companyList.map((c) => {
+                  const health = healthByCompany.get(c.id)!
+                  return (
+                    <tr key={c.id} className="table-row-hover border-b border-slate-100">
+                      <td className="py-2">
+                        <Link href={`/companies/${c.id}`} className="font-medium text-slate-900 hover:text-teal-700">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="py-2 text-slate-600">{getJurisdictionLabel(c.jurisdiction, c.jurisdiction_other)}</td>
+                      <td className="py-2 text-slate-600">{c.entity_type ?? '—'}</td>
+                      <td className="py-2 text-slate-600">{c.fye}</td>
+                      <td className="py-2">
+                        <span className={`badge ${statusBadge[health.status]}`} title={health.reasons.map((r) => r.message).join('; ')}>
+                          {health.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

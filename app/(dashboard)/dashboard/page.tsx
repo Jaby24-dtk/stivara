@@ -94,30 +94,30 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="gradient-panel rounded-2xl px-8 py-10">
+      <div className="gradient-panel rounded-2xl px-5 py-7 sm:px-8 sm:py-10">
         <p className="relative text-xs font-semibold uppercase tracking-[0.2em] mb-2" style={{ color: 'var(--gold-light)' }}>
           <Greeting />
         </p>
-        <h1 className="relative font-display text-5xl md:text-6xl font-semibold tracking-tight text-white">
+        <h1 className="relative font-display text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight text-white break-words">
           {user.name}
         </h1>
-        <p className="relative text-base text-slate-300 mt-2">{companyList.length} companies under management</p>
+        <p className="relative text-base text-slate-300 mt-2">{companyList.length} {companyList.length === 1 ? 'company' : 'companies'} under management</p>
       </div>
 
-      <div className="card-gold p-7">
+      <div className="card-gold p-5 sm:p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--gold)' }}>Daily briefing</p>
         <p className="text-base text-slate-700 leading-relaxed">{briefing}</p>
       </div>
 
-      <div className="card-gold p-7">
+      <div className="card-gold p-5 sm:p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] mb-5" style={{ color: 'var(--gold)' }}>Corporate Trust Score</p>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-3 sm:gap-6">
           <div>
-            <p className="font-display gradient-text text-6xl md:text-7xl font-semibold leading-none">{portfolioScore.trustScore}</p>
+            <p className="font-display gradient-text text-5xl sm:text-6xl md:text-7xl font-semibold leading-none">{portfolioScore.trustScore}</p>
             <p className="text-sm text-slate-500 mt-2">Trust score</p>
           </div>
           <div>
-            <p className="font-display gradient-text text-6xl md:text-7xl font-semibold leading-none">{portfolioScore.governanceScore}</p>
+            <p className="font-display gradient-text text-5xl sm:text-6xl md:text-7xl font-semibold leading-none">{portfolioScore.governanceScore}</p>
             <p className="text-sm text-slate-500 mt-2">Governance</p>
           </div>
           <div>
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="card-gold p-7">
+      <div className="card-gold p-5 sm:p-7">
         <h2 className="font-display text-2xl font-semibold text-slate-900 mb-1">Today&rsquo;s Priority</h2>
         <p className="text-base text-slate-500 mb-5">Everything that needs action, across your whole portfolio, most urgent first.</p>
         {riskItems.length === 0 ? (
@@ -138,9 +138,9 @@ export default async function DashboardPage() {
         ) : (
           <ul className="flex flex-col gap-2">
             {riskItems.map((item, i) => (
-              <li key={i} className="flex items-center justify-between text-base py-3 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className={`badge ${item.severity === 'red' ? 'badge-danger' : 'badge-warning'}`}>
+              <li key={i} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-base py-3 border-b border-slate-100 last:border-0">
+                <div className="flex items-start sm:items-center gap-3">
+                  <span className={`badge shrink-0  ${item.severity === 'red' ? 'badge-danger' : 'badge-warning'}`}>
                     {item.severity === 'red' ? 'overdue' : 'due soon'}
                   </span>
                   <span className="text-slate-700">{item.message}</span>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <div className="card-gold p-7">
+      <div className="card-gold p-5 sm:p-7">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-display text-2xl font-semibold text-slate-900">Companies</h2>
           <Link href="/companies" className="btn-secondary btn-sm">View all</Link>
@@ -162,33 +162,35 @@ export default async function DashboardPage() {
         {companyList.length === 0 ? (
           <p className="text-base text-slate-500">No companies yet. <Link href="/companies" className="font-medium" style={{ color: 'var(--teal)' }}>Add your first company</Link>.</p>
         ) : (
-          <table className="w-full text-base">
-            <thead>
-              <tr className="text-left text-slate-500 border-b border-slate-200">
-                <th className="py-2 font-medium">Name</th>
-                <th className="py-2 font-medium">Jurisdiction</th>
-                <th className="py-2 font-medium">FYE</th>
-                <th className="py-2 font-medium">Health</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companyList.map((c) => {
-                const health = healthByCompany.get(c.id)!
-                return (
-                  <tr key={c.id} className="table-row-hover border-b border-slate-100">
-                    <td className="py-3">
-                      <Link href={`/companies/${c.id}`} className="font-display font-medium text-lg text-slate-900 hover:text-teal-700">
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="py-3 text-slate-600">{c.jurisdiction}</td>
-                    <td className="py-3 text-slate-600">{c.fye}</td>
-                    <td className="py-3"><span className={`badge ${statusBadge[health.status]}`}>{health.status}</span></td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full text-base">
+              <thead>
+                <tr className="text-left text-slate-500 border-b border-slate-200">
+                  <th className="py-2 pr-4 font-medium">Name</th>
+                  <th className="py-2 font-medium">Jurisdiction</th>
+                  <th className="py-2 font-medium">FYE</th>
+                  <th className="py-2 font-medium">Health</th>
+                </tr>
+              </thead>
+              <tbody>
+                {companyList.map((c) => {
+                  const health = healthByCompany.get(c.id)!
+                  return (
+                    <tr key={c.id} className="table-row-hover border-b border-slate-100">
+                      <td className="py-3">
+                        <Link href={`/companies/${c.id}`} className="font-display font-medium text-lg text-slate-900 hover:text-teal-700">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="py-3 text-slate-600">{c.jurisdiction}</td>
+                      <td className="py-3 text-slate-600">{c.fye}</td>
+                      <td className="py-3"><span className={`badge ${statusBadge[health.status]}`}>{health.status}</span></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

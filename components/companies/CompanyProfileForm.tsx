@@ -142,7 +142,7 @@ export function CompanyProfileForm({ company, otherCompanies, readOnly = false }
       </div>
 
       {tab === 'identity' && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <TextField label="UEN" value={fields.uen} onChange={(v) => set('uen', v)} />
           <TextField label="Former name" value={fields.formerName} onChange={(v) => set('formerName', v)} />
           <TextField label="Registered office address" value={fields.registeredOfficeAddress} onChange={(v) => set('registeredOfficeAddress', v)} />
@@ -171,7 +171,7 @@ export function CompanyProfileForm({ company, otherCompanies, readOnly = false }
       )}
 
       {tab === 'classification' && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <TriStateSelect label="Private company" value={fields.isPrivate} onChange={(v) => set('isPrivate', v)} />
           <TriStateSelect label="Exempt private company" value={fields.isExemptPrivate} onChange={(v) => set('isExemptPrivate', v)} />
           <TriStateSelect label="Foreign entity" value={fields.isForeignEntity} onChange={(v) => set('isForeignEntity', v)} />

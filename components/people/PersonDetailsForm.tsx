@@ -88,7 +88,7 @@ export function PersonDetailsForm({ person, readOnly = false }: { person: Person
 
   return (
     <div className="card p-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-slate-500">Full name</label>
           <input className="input-field" value={name} onChange={(e) => { setName(e.target.value); setSaved(false) }} />
@@ -132,7 +132,7 @@ export function PersonDetailsForm({ person, readOnly = false }: { person: Person
           )}
         </div>
         {revealed ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xs text-slate-500">ID number</label>
               <input className="input-field" value={idNumber} onChange={(e) => { setIdNumber(e.target.value); setSaved(false) }} />
@@ -155,7 +155,7 @@ export function PersonDetailsForm({ person, readOnly = false }: { person: Person
         </div>
       </div>
 
-      <div className="mt-5 pt-5 border-t border-slate-100 grid grid-cols-3 gap-4">
+      <div className="mt-5 pt-5 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-slate-500">KYC status</label>
           <select className="input-field" value={kycStatus} onChange={(e) => { setKycStatus(e.target.value); setSaved(false) }}>
