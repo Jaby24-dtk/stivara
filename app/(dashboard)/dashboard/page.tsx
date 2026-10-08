@@ -5,6 +5,7 @@ import type { Company } from '@/lib/types'
 import { computeCompanyHealth, computeMissionControl, type HealthStatus, type RiskLevel } from '@/lib/compliance/health'
 import { buildDailyBriefing } from '@/lib/compliance/briefing'
 import { HealthLegend } from '@/components/companies/HealthLegend'
+import { Greeting } from '@/components/layout/Greeting'
 
 const statusBadge: Record<HealthStatus, string> = {
   green: 'badge-success',
@@ -19,13 +20,6 @@ const riskBadge: Record<RiskLevel, string> = {
 }
 
 type RiskItem = { companyId: string; companyName: string; severity: 'red' | 'amber'; message: string }
-
-function greeting(now: Date): string {
-  const hour = now.getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
-}
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -102,7 +96,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div className="gradient-panel rounded-2xl px-8 py-10">
         <p className="relative text-xs font-semibold uppercase tracking-[0.2em] mb-2" style={{ color: 'var(--gold-light)' }}>
-          {greeting(new Date())}
+          <Greeting />
         </p>
         <h1 className="relative font-display text-5xl md:text-6xl font-semibold tracking-tight text-white">
           {user.name}
