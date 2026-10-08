@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -77,12 +78,7 @@ export default async function Home() {
       >
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #14B8A6, #0B5C55)', boxShadow: '0 0 12px rgba(20,184,166,0.35)' }}
-            >
-              <span className="text-white text-xs font-bold">S</span>
-            </div>
+            <Image src="/stiv-logo-mark.png" alt="STIV" width={32} height={32} unoptimized priority className="shrink-0" />
             <span className="text-white font-semibold text-[15px] tracking-tight">Stivara</span>
           </div>
           <div className="flex items-center gap-3">
