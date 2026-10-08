@@ -198,3 +198,79 @@ select.input-field { appearance: none; background-image: url("data:image/svg+xml
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* ── Public landing page ─────────────────────────────────────────── */
+.lp-hero {
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(201,162,39,0.16) 0%, transparent 70%),
+    radial-gradient(40% 40% at 85% 30%, rgba(184,115,72,0.10) 0%, transparent 70%),
+    linear-gradient(180deg, #070C17 0%, #0B1220 55%, #0E1830 100%);
+  position: relative;
+  overflow: hidden;
+}
+.lp-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(70% 60% at 50% 20%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 20%, #000 0%, transparent 75%);
+  pointer-events: none;
+}
+.lp-dark { background: linear-gradient(180deg, #0B1220 0%, #0E1830 100%); }
+.lp-ivory { background: #FAF8F4; }
+.lp-gold-text {
+  background-image: linear-gradient(100deg, #F3E2AE 0%, #D9B75A 40%, #C08A5B 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+.lp-eyebrow {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--gold);
+}
+.lp-eyebrow::before, .lp-eyebrow::after {
+  content: ''; width: 28px; height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+.lp-eyebrow::after { transform: scaleX(-1); }
+.lp-eyebrow-left::before { display: none; }
+.lp-eyebrow-left::after { transform: none; background: linear-gradient(90deg, currentColor, transparent); }
+.btn-gold {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 22px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap;
+  color: #0B1220;
+  background: linear-gradient(180deg, #EED48A 0%, #C9A227 100%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset, 0 8px 24px -8px rgba(201,162,39,0.55);
+  transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+.btn-gold:hover { filter: brightness(1.06); box-shadow: 0 0 0 1px rgba(255,255,255,0.3) inset, 0 10px 30px -8px rgba(201,162,39,0.7); }
+.btn-gold:active { transform: scale(0.98); }
+.btn-gold-sm { padding: 8px 16px; font-size: 13px; }
+.btn-ghost-light {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 22px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+  color: #E2E8F0; border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.03);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-ghost-light:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
+.lp-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,162,39,0.06) inset;
+  backdrop-filter: blur(8px);
+}
+.lp-card {
+  background: white; border-radius: 18px;
+  border: 1px solid #ECE7DD;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03), 0 12px 32px -18px rgba(15,23,42,0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.lp-card:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(15,23,42,0.03), 0 18px 40px -18px rgba(15,23,42,0.25); }
+.lp-rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(201,162,39,0.5), transparent); }
