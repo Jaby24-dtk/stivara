@@ -106,14 +106,14 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl break-words font-bold text-slate-900 tracking-tight">{companyRow.name}</h1>
           <p className="text-sm text-slate-500">
             {getJurisdictionLabel(companyRow.jurisdiction, companyRow.jurisdiction_other)} · {companyRow.entity_type ?? 'Entity type not set'} · FYE {companyRow.fye}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className={`badge ${healthBadge[health.status]}`}>{healthLabel[health.status]}</span>
           <Link href={`/companies/${id}/settings`} className="btn-secondary btn-sm">Full profile</Link>
           {canEdit && <EditCompanyButton company={companyRow} />}
@@ -121,7 +121,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 mb-1">Corporate Doctor</h2>
         <p className="text-sm text-slate-500 mb-4">
           Scans the director register, statutory filings, and tasks on record for {companyRow.name}.
@@ -212,7 +212,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
       <AiSuggestions companyId={id} />
 
       {health.reasons.length > 0 && (
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Compliance health</h2>
           <ul className="flex flex-col gap-2">
             {health.reasons.map((r, i) => (
@@ -227,11 +227,11 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="card p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-slate-900">People</h2>
           {canEdit && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <DirectorAppointmentWizard companyId={id} />
               <AddLegalEntityButton companyId={id} />
               <AddPersonButton companyId={id} />
@@ -280,7 +280,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Compliance calendar</h2>
         {eventList.length === 0 ? (
           <p className="text-sm text-slate-500">No compliance events on record.</p>
@@ -300,7 +300,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Tasks</h2>
         {taskList.length === 0 ? (
           <p className="text-sm text-slate-500">No tasks yet.</p>
@@ -319,7 +319,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 mb-1">Draft a resolution</h2>
         <p className="text-sm text-slate-500 mb-4">
           Describe what you need in plain English — the AI Company Secretary will draft it and flag the correct approval type.
@@ -327,7 +327,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         <ResolutionGenerator companyId={id} companyName={companyRow.name} />
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900">Documents</h2>
           {canEdit && <UploadDocumentButton companyId={id} />}
@@ -346,7 +346,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      <div className="card p-6">
+      <div className="card p-4 sm:p-6">
         <h2 className="text-lg font-bold text-slate-900 mb-4">Timeline</h2>
         <CompanyTimeline events={timeline} />
       </div>

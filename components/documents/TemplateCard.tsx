@@ -10,8 +10,8 @@ export function TemplateCard({ template }: { template: DocumentTemplate }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="card-gold p-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="card-gold p-5 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
         <div>
           <h3 className="font-display text-xl font-semibold text-slate-900">{template.name}</h3>
           <p className="text-sm text-slate-500 mt-1">{template.description}</p>
