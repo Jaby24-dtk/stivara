@@ -61,6 +61,7 @@ export function Sidebar({ userName, orgName }: { userName: string; orgName: stri
           <Link
             key={href}
             href={href}
+            onClick={() => setOpen(false)}
             className={`sidebar-link ${pathname.startsWith(href) ? 'active' : ''}`}
           >
             <Icon size={18} />

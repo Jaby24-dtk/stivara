@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           <p className="text-base text-slate-500">No companies yet. <Link href="/companies" className="font-medium" style={{ color: 'var(--teal)' }}>Add your first company</Link>.</p>
         ) : (
           <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-base">
+            <table className="w-full text-base [&_th]:pr-4 [&_td]:pr-4">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-slate-200">
                   <th className="py-2 pr-4 font-medium">Name</th>

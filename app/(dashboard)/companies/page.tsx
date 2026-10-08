@@ -55,7 +55,7 @@ export default async function CompaniesPage() {
           <p className="text-sm text-slate-500">No companies yet.</p>
         ) : (
           <div className="overflow-x-auto -mx-1 px-1">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm [&_th]:pr-4 [&_td]:pr-4">
               <thead>
                 <tr className="text-left text-slate-500 border-b border-slate-200">
                   <th className="py-2 font-medium">Name</th>
