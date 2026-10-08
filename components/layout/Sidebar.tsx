@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -20,12 +21,7 @@ const sidebarBg = { background: 'linear-gradient(180deg, #0B1220 0%, #0F1A2E 100
 function Brand({ orgName }: { orgName: string }) {
   return (
     <div className="flex items-center gap-2.5 min-w-0">
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: 'linear-gradient(135deg, #E8C766, #C9A227)', boxShadow: '0 0 12px rgba(201,162,39,0.35)' }}
-      >
-        <span className="text-xs font-bold" style={{ color: 'var(--navy)' }}>S</span>
-      </div>
+      <Image src="/stiv-logo-mark.png" alt="STIV" width={32} height={32} unoptimized priority className="shrink-0" />
       <div className="min-w-0">
         <p className="text-white font-semibold text-[15px] tracking-tight leading-tight">Stivara</p>
         <p className="text-slate-400 text-xs truncate leading-tight">{orgName}</p>
