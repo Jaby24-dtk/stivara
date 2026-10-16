@@ -71,9 +71,9 @@ function MfaStep() {
   }
 
   return (
-    <div className="card w-full max-w-sm p-8">
+    <div className="card w-full max-w-md p-6 sm:p-7">
       <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">Two-step sign-in</h1>
-      <p className="text-sm text-slate-500 mb-5">Stivara needs a code from your phone as well as your password.</p>
+      <p className="text-sm text-slate-500 mb-4">Stivara needs a code from your phone as well as your password.</p>
 
       {mode.kind === 'loading' && <p className="text-sm text-slate-500">Loading…</p>}
       {mode.kind === 'error' && <p className="text-sm text-red-600">{mode.message}</p>}
@@ -81,13 +81,15 @@ function MfaStep() {
       {mode.kind === 'enroll' && (
         <div className="mb-4 space-y-3 text-sm">
           <p className="font-semibold text-slate-900">Set up two-step sign-in (one time)</p>
-          <ol className="list-decimal space-y-1 pl-5 text-[13px] text-slate-500">
-            <li>Open an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password…).</li>
-            <li>Scan this QR code.</li>
-            <li>Enter the 6-digit code the app shows.</li>
-          </ol>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={mode.qr} alt="QR code for your authenticator app" className="mx-auto h-44 w-44 rounded-lg bg-white p-2" />
+          <div className="flex flex-wrap items-center gap-4">
+            <ol className="list-decimal space-y-1 pl-5 text-[13px] text-slate-500 flex-1 min-w-[170px]">
+              <li>Open an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password…).</li>
+              <li>Scan this QR code.</li>
+              <li>Enter the 6-digit code the app shows.</li>
+            </ol>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={mode.qr} alt="QR code for your authenticator app" className="mx-auto h-36 w-36 shrink-0 rounded-lg bg-white p-1.5" />
+          </div>
           <details className="text-[12px] text-slate-500">
             <summary className="cursor-pointer font-semibold text-teal-700">Setup key (for manual entry, or for STIV&apos;s saved login)</summary>
             <code className="mt-1 block break-all rounded bg-slate-100 px-2 py-1 font-mono text-slate-900">{mode.secret}</code>
@@ -128,7 +130,7 @@ function MfaStep() {
 
 export default function MfaPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-6">
       <Suspense fallback={null}>
         <MfaStep />
       </Suspense>
