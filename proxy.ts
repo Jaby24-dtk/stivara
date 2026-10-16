@@ -40,11 +40,37 @@ export async function proxy(request: NextRequest) {
   // must be reachable before a session cookie exists.
   const isSsoBridge = pathname === '/sso'
 
+  // Two-step sign-in is required for everyone: a password-only (aal1)
+  // session can't use the app or its API. No factor yet → set one up at
+  // /mfa; factor on file → enter the code there. (Read from the JWT, no
+  // network call.)
+  const isMfaPage = pathname === '/mfa'
+  const isSignupApi = pathname === '/api/auth/signup'
+  if (user && !isMfaPage && !isSsoBridge && !isSignupApi && !isPublicPage) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aal?.currentLevel !== 'aal2') {
+      if (isApiRoute) {
+        return NextResponse.json({ error: 'Two-step verification required' }, { status: 401 })
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/mfa'
+      url.search = ''
+      if (!isAuthPage && !isRoot) url.searchParams.set('next', pathname + request.nextUrl.search)
+      return NextResponse.redirect(url)
+    }
+  }
+  if (!user && isMfaPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
   // API routes handle their own auth (401 JSON) — never redirect them to a page
   if (isApiRoute) return response
 
   // Redirect unauthenticated users to /login
-  if (!user && !isAuthPage && !isRoot && !isPublicPage && !isSsoBridge) {
+  if (!user && !isAuthPage && !isRoot && !isPublicPage && !isSsoBridge && !isMfaPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

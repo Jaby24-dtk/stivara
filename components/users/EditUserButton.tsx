@@ -16,11 +16,30 @@ export function EditUserButton({ member, roles }: { member: Member; roles: Platf
   // A user on a retired role can't keep it, so preselect a valid one.
   const [role, setRole] = useState<PlatformRole>(roles.includes(member.role) ? member.role : 'client_user')
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const [mfaReset, setMfaReset] = useState<'idle' | 'busy' | 'done'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  async function resetMfa() {
+    setError(null)
+    setMfaReset('busy')
+    const res = await fetch(`/api/users/${member.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resetMfa: true }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? 'Could not reset two-step login')
+      setMfaReset('idle')
+      return
+    }
+    setMfaReset('done')
+  }
+
   function close() {
     setOpen(false)
+    setMfaReset('idle')
     setConfirmRemove(false)
     setError(null)
   }
@@ -91,6 +110,16 @@ export function EditUserButton({ member, roles }: { member: Member; roles: Platf
                 {error && <p className="text-sm text-red-600">{error}</p>}
                 <button className="btn-primary justify-center" type="submit" disabled={loading}>
                   {loading ? 'Saving…' : 'Save changes'}
+                </button>
+                <button
+                  type="button"
+                  className="text-sm text-slate-600 hover:underline self-start"
+                  onClick={resetMfa}
+                  disabled={mfaReset !== 'idle'}
+                >
+                  {mfaReset === 'done'
+                    ? 'Two-step login reset — they will set it up again at next sign-in'
+                    : mfaReset === 'busy' ? 'Resetting…' : 'Reset two-step login (lost phone)'}
                 </button>
                 <button
                   type="button"

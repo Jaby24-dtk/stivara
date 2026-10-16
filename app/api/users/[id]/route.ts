@@ -36,6 +36,30 @@ export async function PATCH(request: Request, { params }: Params) {
   const { user, target, supabase } = loaded
 
   const body = await request.json()
+
+  // Lost phone: remove the user's authenticator so their next sign-in sets up a new one.
+  if (body.resetMfa === true) {
+    const admin = createAdminClient()
+    const { data: factors, error: listError } = await admin.auth.admin.mfa.listFactors({ userId: target.id })
+    if (listError) return NextResponse.json({ error: listError.message }, { status: 400 })
+    for (const f of factors?.factors ?? []) {
+      const { error: delError } = await admin.auth.admin.mfa.deleteFactor({ userId: target.id, id: f.id })
+      if (delError) return NextResponse.json({ error: delError.message }, { status: 400 })
+    }
+    await logAudit({
+      supabase,
+      organizationId: user.organization_id,
+      actorUserId: user.id,
+      tableName: 'users',
+      recordId: target.id,
+      action: 'update',
+      oldValue: { mfa_factors: factors?.factors?.length ?? 0 },
+      newValue: { mfa_factors: 0 },
+      request,
+    })
+    return NextResponse.json({ ok: true })
+  }
+
   const updates: Partial<Pick<UserRow, 'name' | 'role'>> = {}
 
   if (body.name !== undefined) {
