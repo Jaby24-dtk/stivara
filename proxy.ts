@@ -31,7 +31,7 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isAuthPage = pathname === '/login' || pathname === '/signup'
+  const isAuthPage = pathname === '/login'
   const isRoot = pathname === '/'
   const isPublicPage = pathname === '/trust'
   const isApiRoute = pathname.startsWith('/api/')
@@ -45,8 +45,7 @@ export async function proxy(request: NextRequest) {
   // /mfa; factor on file → enter the code there. (Read from the JWT, no
   // network call.)
   const isMfaPage = pathname === '/mfa'
-  const isSignupApi = pathname === '/api/auth/signup'
-  if (user && !isMfaPage && !isSsoBridge && !isSignupApi && !isPublicPage) {
+  if (user && !isMfaPage && !isSsoBridge && !isPublicPage) {
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aal?.currentLevel !== 'aal2') {
       if (isApiRoute) {

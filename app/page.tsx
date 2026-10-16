@@ -132,8 +132,7 @@ export default async function Home() {
           </Link>
           <nav className="flex items-center gap-4 sm:gap-6">
             <Link href="/trust" className="hidden sm:inline text-sm font-medium text-slate-400 hover:text-white transition-colors">Trust Center</Link>
-            <Link href="/login" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Sign in</Link>
-            <Link href="/signup" className="btn-gold btn-gold-sm">Get started</Link>
+            <Link href="/login" className="btn-gold btn-gold-sm">Sign in</Link>
           </nav>
         </header>
 
@@ -150,10 +149,9 @@ export default async function Home() {
             just written software for one.
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-9 max-w-xs sm:max-w-none mx-auto">
-            <Link href="/signup" className="btn-gold">
-              Get started <ArrowRight size={16} />
+            <Link href="/login" className="btn-gold">
+              Sign in <ArrowRight size={16} />
             </Link>
-            <Link href="/login" className="btn-ghost-light">Sign in</Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-10 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
             <span className="text-slate-400 normal-case tracking-normal font-medium text-xs">Built for Singapore</span>
@@ -272,12 +270,11 @@ export default async function Home() {
               <h2 className="font-display text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight">
                 Ready to see it <span className="lp-gold-text italic font-medium">in action?</span>
               </h2>
-              <p className="text-slate-400 text-sm sm:text-base mt-4 mb-8">Sign in, or create an account to add your first company.</p>
+              <p className="text-slate-400 text-sm sm:text-base mt-4 mb-8">Accounts are added by your organization&apos;s admin.</p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-xs sm:max-w-none mx-auto">
-                <Link href="/signup" className="btn-gold">
-                  Get started <ArrowRight size={16} />
+                <Link href="/login" className="btn-gold">
+                  Sign in <ArrowRight size={16} />
                 </Link>
-                <Link href="/login" className="btn-ghost-light">Sign in</Link>
               </div>
             </div>
           </div>

@@ -7,10 +7,11 @@ import { assignableRoles, canAssignRole, canManageUsers } from '@/lib/users/perm
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// Admin-only: adds a login to the caller's own organization. Mirrors
-// app/api/auth/signup/route.ts (auth user + public.users row via the
-// service-role client, rolling back the auth user on failure), except the
-// organization always comes from the caller's session, never the request.
+// Admin-only: adds a login to the caller's own organization (auth user +
+// public.users row via the service-role client, rolling back the auth user
+// on failure). The organization always comes from the caller's session,
+// never the request. This is the only way accounts are created — there is
+// no public sign-up.
 export async function POST(request: Request) {
   const user = await getCurrentUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
