@@ -38,13 +38,19 @@ export default function SsoBridgePage() {
     window.history.replaceState({}, '', '/sso')
 
     const supabase = createClient()
-    supabase.auth.setSession({ access_token, refresh_token }).then(({ error: sessionError }) => {
-      if (sessionError) {
-        setError(sessionError.message)
-        return
-      }
-      router.replace('/dashboard')
-    })
+    // Drop any older session left in this frame's cookies first. Otherwise the
+    // client's startup refresh of that stale session can fail ("Refresh Token
+    // Not Found") and wipe out the fresh session STIV just handed over.
+    supabase.auth.signOut({ scope: 'local' })
+      .catch(() => {})
+      .then(() => supabase.auth.setSession({ access_token, refresh_token }))
+      .then(({ error: sessionError }) => {
+        if (sessionError) {
+          setError(sessionError.message)
+          return
+        }
+        router.replace('/dashboard')
+      })
   }, [router])
 
   return (

@@ -30,7 +30,15 @@ function MfaStep() {
     const supabase = createClient()
     ;(async () => {
       const { data, error } = await supabase.auth.mfa.listFactors()
-      if (error) return setMode({ kind: 'error', message: error.message })
+      if (error) {
+        // A revoked/expired sign-in, not a 2FA problem: clear it so the next
+        // attempt (STIV's Reload, or the login page) starts clean.
+        if (/refresh token|jwt|session/i.test(error.message)) {
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+          return setMode({ kind: 'error', message: 'Your sign-in expired. Sign in again to continue.' })
+        }
+        return setMode({ kind: 'error', message: error.message })
+      }
       const verified = data.totp.find((f) => f.status === 'verified')
       if (verified) return setMode({ kind: 'verify', factorId: verified.id })
 
@@ -76,7 +84,21 @@ function MfaStep() {
       <p className="text-sm text-slate-500 mb-4">Stivara needs a code from your phone as well as your password.</p>
 
       {mode.kind === 'loading' && <p className="text-sm text-slate-500">Loading…</p>}
-      {mode.kind === 'error' && <p className="text-sm text-red-600">{mode.message}</p>}
+      {mode.kind === 'error' && (
+        <div className="space-y-3">
+          <p className="text-sm text-red-600">{mode.message}</p>
+          <button
+            className="btn-primary justify-center w-full"
+            onClick={() => {
+              // Inside STIV, its Reload button re-signs automatically; standalone, go to login.
+              if (window.top !== window.self) window.location.reload()
+              else window.location.assign('/login')
+            }}
+          >
+            Sign in again
+          </button>
+        </div>
+      )}
 
       {mode.kind === 'enroll' && (
         <div className="mb-4 space-y-3 text-sm">
